@@ -457,7 +457,7 @@ def main():
             <div id="instructions">
                 <h2>Pizza Toss Game</h2>
                 <p>Press SPACE to get a pizza from the oven.<br>
-                Hold SPACE to charge the power bar, release to throw.<br>
+                Hold SPACE to charge, release to throw.<br>
                 The longer you hold, the further it will go!<br>
                 Use UP and DOWN keys to move the oven.<br>
                 <br>
