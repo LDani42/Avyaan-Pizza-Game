@@ -1182,7 +1182,7 @@ def main():
     st.markdown("---")
     st.markdown("""
     ### About This Game
-    This is a simple Pizza Toss game built with HTML, CSS, and JavaScript, and embedded in Streamlit. 
+    This is a simple Pizza Toss game built by Avyaan Dani. 
     """)
 
 
