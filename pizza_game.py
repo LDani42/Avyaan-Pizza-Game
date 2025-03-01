@@ -9,7 +9,7 @@ def main():
 
     st.title("Pizza Toss Game")
     
-    # Create HTML string for the game
+    # Create HTML string for the game - properly escaping all JS code
     game_html = """
     <!DOCTYPE html>
     <html lang="en">
@@ -763,9 +763,9 @@ def main():
                     }
                     
                     // Add a glowing effect to indicate it's fresh from the oven
-                    pizza.style.filter = 'drop-shadow(0 0 15px rgba(255, 120, 50, 0.8))';
+                    pizza.style.filter = "drop-shadow(0 0 15px rgba(255, 120, 50, 0.8))";
                     setTimeout(() => {
-                        pizza.style.filter = 'drop-shadow(0 2px 5px rgba(0, 0, 0, 0.3))';
+                        pizza.style.filter = "drop-shadow(0 2px 5px rgba(0, 0, 0, 0.3))";
                     }, 1000);
                 }
                 
@@ -1194,6 +1194,3 @@ def main():
 
 if __name__ == "__main__":
     main()
-0 15px rgba(255, 120, 50, 0.8))';
-                    setTimeout(() => {
-                        pizza.style.filter = 'drop-shadow(0
