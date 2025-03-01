@@ -21,29 +21,20 @@ def main():
             body {
                 margin: 0;
                 padding: 0;
-                display: flex;
-                justify-content: center;
-                align-items: center;
-                height: 100vh;
+                /* Instead of forcing 100vh + hidden overflow,
+                   let the container size itself for smaller screens. */
                 font-family: 'Arial', sans-serif;
-                overflow: hidden;
+                background: #111; /* optional darker bg outside the game container */
             }
-            
-            /* 
-             * Make #game-container fluid & responsive:
-             * - width: 100% (so it fills parent)
-             * - max-width: 800px (prevent being too large on desktops)
-             * - aspect-ratio: 4/3 (keeps the shape of 800x600)
-             * - margin: 0 auto (center if there's leftover width)
-             */
+           
             #game-container {
+                /* Critical: fluid width + aspect-ratio keeps your game scaled. */
                 position: relative;
                 width: 100%;
-                max-width: 800px;
-                aspect-ratio: 4 / 3;
-                margin: 0 auto;
+                max-width: 800px; /* Prevent the game from blowing out on desktop */
+                aspect-ratio: 4 / 3; 
+                margin: 0 auto;      /* Center it if there's leftover space */
                 background: linear-gradient(135deg, #67B8DE, #0396FF);
-                border: none;
                 border-radius: 12px;
                 box-shadow: 0 10px 30px rgba(0, 0, 0, 0.4), 
                             0 0 100px rgba(255, 255, 255, 0.2);
@@ -454,26 +445,6 @@ def main():
                 z-index: 1000;
             }
 
-            /* 
-             * COMMENTED OUT: old transform-based scaling (no longer needed with aspect-ratio).
-             *
-             * @media (max-width: 850px) {
-             *     #game-container {
-             *         transform: scale(0.9);
-             *         transform-origin: top center;
-             *     }
-             * }
-             * @media (max-width: 750px) {
-             *     #game-container {
-             *         transform: scale(0.8);
-             *     }
-             * }
-             * @media (max-width: 650px) {
-             *     #game-container {
-             *         transform: scale(0.7);
-             *     }
-             * }
-             */
         </style>
     </head>
     <body>
@@ -1149,11 +1120,10 @@ def main():
     st.markdown(
         """
         <style>
-        /* Just for outer container styling in Streamlit. 
-           We don't fix a height here so #game-container can be responsive. */
+        /* Just for the outer container in Streamlit. */
         .outer-game-wrapper {
             width: 100%;
-            max-width: 900px;
+            max-width: 900px;  /* so the entire embed doesn't overflow on desktop */
             margin: 0 auto;
         }
         </style>
@@ -1161,7 +1131,6 @@ def main():
         unsafe_allow_html=True
     )
 
-    # Instructions in Streamlit
     st.markdown("""
     ### How to Play
     1. Click inside the game area to give it focus  
@@ -1171,20 +1140,18 @@ def main():
     """)
 
     st.markdown('<div class="outer-game-wrapper">', unsafe_allow_html=True)
-
-    # Embed the responsive HTML game
-    # - height=800 or so, to give enough space without scroll
-    # - scrolling=False to hide scrollbars
-    components.html(game_html, height=800, scrolling=False)
-
-    st.markdown('</div>', unsafe_allow_html=True)
     
+    # Setting a height ~800–1000 px usually fits large desktop screens.
+    # On mobile, users can scroll within the iframe if needed.
+    components.html(game_html, height=900, scrolling=True)
+    
+    st.markdown('</div>', unsafe_allow_html=True)
+
     st.markdown("---")
     st.markdown("""
     ### About This Game
     This is a simple Pizza Toss game built by Avyaan Dani. 
     """)
-
 
 if __name__ == "__main__":
     main()
