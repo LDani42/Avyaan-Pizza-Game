@@ -2,56 +2,39 @@ import streamlit as st
 import streamlit.components.v1 as components
 
 def main():
-    # Make Streamlit fill the page width, hide sidebar by default
     st.set_page_config(
         page_title="Pizza Toss Game",
-        layout="wide",
-        initial_sidebar_state="collapsed"
+        layout="wide"
     )
 
-    # Hide header, footer, and menu to get a full-page feel
-    st.markdown(
-        """
-        <style>
-        /* Hide the Streamlit header, footer, and main menu */
-        header {visibility: hidden;}
-        footer {visibility: hidden;}
-        #MainMenu {visibility: hidden;}
-
-        /* Remove top/bottom padding on main block to get a more "fullscreen" look */
-        .css-18e3th9, .css-1d391kg, .css-1v3fvcr {
-            padding: 0 !important;
-            margin: 0 !important;
-        }
-        </style>
-        """,
-        unsafe_allow_html=True
-    )
-
-    # Full game HTML with complete implementation
+    st.title("Pizza Toss Game")
+    
+    # HTML/JS code for the game
     game_html = """
     <!DOCTYPE html>
     <html lang="en">
     <head>
-        <meta charset="UTF-8" />
-        <!-- Important for mobile scaling -->
-        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
         <title>Pizza Toss Game</title>
         <style>
-            /* Make the entire browser area for the game. We'll rely on the parent iframe size. */
-            html, body {
-                margin: 0; 
-                padding: 0; 
-                width: 100%; 
-                height: 100%;
-                overflow: hidden; 
+            body {
+                margin: 0;
+                padding: 0;
+                display: flex;
+                justify-content: center;
+                align-items: center;
+                height: 100vh;
                 font-family: 'Arial', sans-serif;
-                background: black;
+                overflow: hidden;
             }
-
+            
             /* 
-             * #game-container: fluid width, keep aspect ratio, 
-             * so it scales on smaller devices. 
+             * Make #game-container fluid & responsive:
+             * - width: 100% (so it fills parent)
+             * - max-width: 800px (prevent being too large on desktops)
+             * - aspect-ratio: 4/3 (keeps the shape of 800x600)
+             * - margin: 0 auto (center if there's leftover width)
              */
             #game-container {
                 position: relative;
@@ -62,11 +45,11 @@ def main():
                 background: linear-gradient(135deg, #67B8DE, #0396FF);
                 border: none;
                 border-radius: 12px;
-                box-shadow: 0 10px 30px rgba(0, 0, 0, 0.4),
+                box-shadow: 0 10px 30px rgba(0, 0, 0, 0.4), 
                             0 0 100px rgba(255, 255, 255, 0.2);
                 overflow: hidden;
             }
-
+            
             #game-info {
                 position: absolute;
                 top: 15px;
@@ -82,19 +65,7 @@ def main():
                 backdrop-filter: blur(5px);
                 border: 1px solid rgba(255, 255, 255, 0.1);
             }
-
-            #streamlit-app-warning {
-                position: absolute;
-                bottom: 10px;
-                left: 10px;
-                color: white;
-                background: rgba(0, 0, 0, 0.7);
-                padding: 10px;
-                border-radius: 5px;
-                font-size: 14px;
-                z-index: 1000;
-            }
-
+            
             #oven {
                 position: absolute;
                 bottom: 150px;
@@ -111,109 +82,297 @@ def main():
                 transition: all 0.2s ease;
             }
             
+            #oven-top-controls {
+                position: absolute;
+                width: 100%;
+                height: 20px;
+                background: linear-gradient(to right, #333, #444, #333);
+                top: -10px;
+                left: 0;
+                border-radius: 10px 10px 0 0;
+                box-shadow: inset 0 2px 3px rgba(255, 255, 255, 0.1);
+            }
+            
+            .oven-knob {
+                position: absolute;
+                width: 12px;
+                height: 12px;
+                background: linear-gradient(135deg, #DDD, #999);
+                border-radius: 50%;
+                top: 4px;
+                box-shadow: 0 2px 4px rgba(0, 0, 0, 0.3),
+                            inset 0 -2px 3px rgba(0, 0, 0, 0.2),
+                            inset 0 2px 3px rgba(255, 255, 255, 0.7);
+            }
+            
+            #oven-door {
+                position: absolute;
+                width: 85px;
+                height: 70px;
+                background: linear-gradient(135deg, #444, #222);
+                top: 15px;
+                left: 17px;
+                border-radius: 8px;
+                border: 1px solid #111;
+                box-shadow: inset 0 0 15px rgba(0, 0, 0, 0.7),
+                            0 0 5px rgba(0, 0, 0, 0.5);
+                overflow: hidden;
+            }
+            
+            #oven-handle {
+                position: absolute;
+                width: 50px;
+                height: 8px;
+                background: linear-gradient(to bottom, #EEE, #999);
+                left: 17px;
+                top: 35px;
+                border-radius: 4px;
+                box-shadow: 0 2px 4px rgba(0, 0, 0, 0.4),
+                            inset 0 1px 2px rgba(255, 255, 255, 0.8);
+            }
+            
+            #oven-window {
+                position: absolute;
+                width: 65px;
+                height: 35px;
+                background: linear-gradient(rgba(255, 170, 50, 0.3), rgba(255, 100, 0, 0.3));
+                border: 2px solid #111;
+                border-radius: 8px;
+                left: 10px;
+                top: 5px;
+                box-shadow: inset 0 0 20px rgba(255, 100, 0, 0.7),
+                            0 0 10px rgba(255, 120, 0, 0.5);
+                overflow: hidden;
+            }
+            
+            /* Add heating element inside the oven */
+            #oven-window::after {
+                content: '';
+                position: absolute;
+                bottom: 5px;
+                left: 5px;
+                right: 5px;
+                height: 3px;
+                background: #FF3700;
+                border-radius: 2px;
+                box-shadow: 0 0 10px #FF5500, 0 0 20px #FF7700;
+                animation: heating 1s ease-in-out infinite alternate;
+            }
+            
+            @keyframes heating {
+                from { opacity: 0.7; }
+                to { opacity: 1; }
+            }
+            
             #pizza {
                 position: absolute;
                 width: 60px;
                 height: 60px;
-                background: #E8BE62;
+                background: radial-gradient(#FFDD99, #E8A33C, #C77B30);
                 border-radius: 50%;
-                left: 80px;
-                bottom: 180px;
+                border: 2px solid #B56D1C;
+                display: flex;
+                justify-content: center;
+                align-items: center;
+                font-size: 24px;
                 transform: rotate(0deg);
-                display: none;
+                transition: transform 0.2s linear;
                 z-index: 10;
+                box-shadow: 0 3px 10px rgba(0, 0, 0, 0.3);
+                filter: drop-shadow(0 2px 5px rgba(0, 0, 0, 0.3));
             }
             
+            /* Add pizza crust detail */
             #pizza::before {
                 content: '';
                 position: absolute;
-                width: 80%;
-                height: 80%;
-                top: 10%;
-                left: 10%;
+                width: 90%;
+                height: 90%;
                 border-radius: 50%;
-                background: #E94F37;
+                border: 2px dashed rgba(180, 120, 40, 0.5);
+                top: 3%;
+                left: 3%;
             }
             
-            #pizza::after {
+            .pepperoni {
+                position: absolute;
+                width: 12px;
+                height: 12px;
+                background: radial-gradient(#FF6347, #D92800);
+                border-radius: 50%;
+                box-shadow: inset 0 0 3px rgba(0, 0, 0, 0.5),
+                            0 1px 2px rgba(0, 0, 0, 0.2);
+                z-index: 2;
+            }
+            
+            .cheese {
+                position: absolute;
+                width: 10px;
+                height: 7px;
+                background: linear-gradient(#FFED97, #F7D358);
+                border-radius: 40% 40% 40% 40%;
+                transform: rotate(30deg);
+                z-index: 1;
+                box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
+            }
+            
+            /* Add sauce splatter */
+            .sauce {
+                position: absolute;
+                width: 7px;
+                height: 7px;
+                background: rgba(200, 30, 0, 0.7);
+                border-radius: 50%;
+                z-index: 0;
+            }
+            
+            #power-bar-container {
+                position: absolute;
+                bottom: 50px;
+                left: 50%;
+                transform: translateX(-50%);
+                width: 300px;
+                height: 30px;
+                background: rgba(255, 255, 255, 0.2);
+                border: none;
+                border-radius: 15px;
+                box-shadow: inset 0 0 10px rgba(0, 0, 0, 0.3),
+                            0 5px 15px rgba(0, 0, 0, 0.2);
+                backdrop-filter: blur(5px);
+                overflow: hidden;
+            }
+            
+            #power-bar {
+                position: absolute;
+                height: 100%;
+                width: 0;
+                background: linear-gradient(90deg, #32CD32, #FFC107, #FF5252);
+                border-radius: 15px;
+                box-shadow: 0 0 10px rgba(255, 255, 255, 0.5);
+                transition: width 0.05s linear;
+            }
+            
+            /* Add power bar shine effect */
+            #power-bar::after {
                 content: '';
                 position: absolute;
-                width: 10%;
-                height: 10%;
-                background: #FFCF99;
-                border-radius: 50%;
-                top: 45%;
-                left: 20%;
-                box-shadow: 20px -15px 0 #FFCF99, 5px 20px 0 #FFCF99, 
-                            25px 10px 0 #FFCF99, 15px -5px 0 #FFCF99;
+                top: 0;
+                left: 0;
+                right: 0;
+                height: 15px;
+                background: linear-gradient(rgba(255, 255, 255, 0.4), rgba(255, 255, 255, 0));
+                border-radius: 15px 15px 0 0;
             }
             
             .target {
                 position: absolute;
                 width: 80px;
                 height: 80px;
-                background: rgba(255, 255, 255, 0.9);
+                background: radial-gradient(circle, rgba(255,255,255,0.9) 0%, rgba(255,255,255,0.5) 70%, rgba(255,255,255,0) 100%);
+                border: 3px solid #FF5858;
                 border-radius: 50%;
                 display: flex;
-                align-items: center;
                 justify-content: center;
+                align-items: center;
                 font-weight: bold;
                 font-size: 20px;
-                box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
-                color: #222;
-                border: 2px solid #222;
+                color: #FF0000;
+                text-shadow: 0 0 5px rgba(255, 255, 255, 0.7);
+                box-shadow: 0 0 15px rgba(255, 0, 0, 0.4),
+                            inset 0 0 15px rgba(255, 0, 0, 0.3);
+                animation: targetPulse 2s infinite alternate ease-in-out;
+            }
+            
+            @keyframes targetPulse {
+                0% { transform: scale(1); box-shadow: 0 0 15px rgba(255, 0, 0, 0.4), inset 0 0 15px rgba(255, 0, 0, 0.3); }
+                100% { transform: scale(1.05); box-shadow: 0 0 20px rgba(255, 0, 0, 0.6), inset 0 0 20px rgba(255, 0, 0, 0.5); }
+            }
+            
+            .target::before {
+                content: '';
+                position: absolute;
+                width: 60px;
+                height: 60px;
+                border: 2px dashed rgba(255, 0, 0, 0.7);
+                border-radius: 50%;
+            }
+            
+            .target::after {
+                content: '';
+                position: absolute;
+                width: 30px;
+                height: 30px;
+                border: 2px solid rgba(255, 0, 0, 0.7);
+                border-radius: 50%;
             }
             
             .powerup {
                 position: absolute;
-                width: 40px;
-                height: 40px;
-                background: rgba(255, 215, 0, 0.9);
-                border-radius: 8px;
-                box-shadow: 0 0 15px rgba(255, 215, 0, 0.8);
-                animation: pulse 1.5s infinite;
+                width: 35px;
+                height: 35px;
+                border-radius: 50%;
+                display: flex;
+                justify-content: center;
+                align-items: center;
+                font-weight: bold;
+                font-size: 16px;
+                box-shadow: 0 0 20px rgba(255, 255, 255, 0.7);
+                animation: powerupFloat 2s infinite alternate ease-in-out;
+                filter: drop-shadow(0 5px 10px rgba(0,0,0,0.3));
+                z-index: 20;
             }
             
-            @keyframes pulse {
-                0% { transform: scale(1); }
-                50% { transform: scale(1.1); }
-                100% { transform: scale(1); }
+            @keyframes powerupFloat {
+                0% { transform: translateY(0) rotate(0deg); }
+                100% { transform: translateY(-10px) rotate(10deg); }
             }
             
-            #power-bar-container {
+            .powerup::before {
+                content: '';
                 position: absolute;
-                left: 50px;
-                bottom: 100px;
-                width: 120px;
-                height: 15px;
-                background: rgba(0, 0, 0, 0.3);
-                border-radius: 10px;
-                overflow: hidden;
+                width: 100%;
+                height: 100%;
+                border-radius: 50%;
+                background: inherit;
+                filter: blur(10px);
+                opacity: 0.5;
+                z-index: -1;
             }
             
-            #power-bar {
-                width: 0%;
-                height: 100%;
-                background: linear-gradient(90deg, #ff4800, #ff0000);
-                border-radius: 10px;
-                transition: width 0.1s linear;
+            .powerup-slow {
+                background: radial-gradient(#FFD700, #FFA500);
+                color: white;
+                text-shadow: 0 1px 3px rgba(0,0,0,0.5);
+            }
+            
+            .powerup-distance {
+                background: radial-gradient(#1E90FF, #0000CD);
+                color: white;
+                text-shadow: 0 1px 3px rgba(0,0,0,0.5);
+            }
+            
+            .powerup-pizza {
+                background: radial-gradient(#FF6347, #DC143C);
+                color: white;
+                text-shadow: 0 1px 3px rgba(0,0,0,0.5);
             }
             
             #instructions, #game-over {
                 position: absolute;
-                top: 0;
-                left: 0;
-                width: 100%;
-                height: 100%;
+                top: 50%;
+                left: 50%;
+                transform: translate(-50%, -50%);
                 background: rgba(0, 0, 0, 0.8);
-                display: flex;
-                flex-direction: column;
-                align-items: center;
-                justify-content: center;
                 color: white;
+                padding: 30px;
+                border-radius: 20px;
                 text-align: center;
-                padding: 20px;
                 z-index: 1000;
+                box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5),
+                            0 0 100px rgba(255, 255, 255, 0.1);
+                backdrop-filter: blur(10px);
+                border: 1px solid rgba(255, 255, 255, 0.1);
+                max-width: 500px;
             }
             
             #game-over {
@@ -221,70 +380,100 @@ def main():
             }
             
             #instructions h2, #game-over h2 {
+                margin-top: 0;
+                color: #FF6347;
                 font-size: 28px;
-                margin-bottom: 20px;
-                text-shadow: 0 2px 4px rgba(0, 0, 0, 0.5);
+                text-shadow: 0 0 10px rgba(255, 99, 71, 0.5);
             }
             
-            #instructions p {
+            #instructions p, #game-over p {
                 font-size: 16px;
-                margin-bottom: 25px;
                 line-height: 1.6;
-                max-width: 80%;
+                margin-bottom: 20px;
             }
             
             #instructions button, #game-over button {
-                background: #E94F37;
+                margin-top: 20px;
+                padding: 12px 30px;
+                background: linear-gradient(135deg, #FF416C, #FF4B2B);
                 color: white;
                 border: none;
-                padding: 12px 24px;
-                font-size: 18px;
                 border-radius: 30px;
                 cursor: pointer;
-                transition: all 0.2s ease;
-                box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+                font-size: 18px;
+                font-weight: bold;
+                transition: all 0.3s ease;
+                box-shadow: 0 5px 15px rgba(255, 75, 43, 0.4);
             }
             
             #instructions button:hover, #game-over button:hover {
-                background: #FF6347;
-                transform: translateY(-2px);
-                box-shadow: 0 6px 12px rgba(0, 0, 0, 0.3);
+                transform: translateY(-3px);
+                box-shadow: 0 8px 20px rgba(255, 75, 43, 0.6);
+            }
+            
+            #instructions button:active, #game-over button:active {
+                transform: translateY(1px);
+                box-shadow: 0 2px 10px rgba(255, 75, 43, 0.4);
+            }
+            
+            @keyframes fadeInOut {
+                0% { opacity: 0; transform: scale(0.5); }
+                10% { opacity: 1; transform: scale(1.2); }
+                20% { transform: scale(1); }
+                80% { opacity: 1; }
+                100% { opacity: 0; }
+            }
+            
+            @keyframes pizzaFall {
+                0% { transform: translateY(-50px) rotate(0deg); opacity: 0; }
+                20% { transform: translateY(0) rotate(180deg); opacity: 1; }
+                60% { transform: translateY(100px) rotate(360deg); opacity: 1; }
+                100% { transform: translateY(250px) rotate(720deg); opacity: 0; }
+            }
+            
+            @keyframes targetHit {
+                0% { transform: scale(1); }
+                50% { transform: scale(1.3); filter: brightness(1.5); }
+                100% { transform: scale(1); }
+            }
+            
+            @keyframes confettiFall {
+                0% { transform: translateY(0) rotate(0); opacity: 1; }
+                100% { transform: translateY(600px) rotate(360deg); opacity: 0; }
+            }
+            
+            #streamlit-app-warning {
+                position: absolute;
+                bottom: 10px;
+                left: 10px;
+                color: white;
+                background: rgba(0, 0, 0, 0.7);
+                padding: 10px;
+                border-radius: 5px;
+                font-size: 14px;
+                z-index: 1000;
             }
 
             /* 
-             * MOBILE CONTROLS (on-screen buttons)
-             * We'll position them at the bottom center. 
+             * COMMENTED OUT: old transform-based scaling (no longer needed with aspect-ratio).
+             *
+             * @media (max-width: 850px) {
+             *     #game-container {
+             *         transform: scale(0.9);
+             *         transform-origin: top center;
+             *     }
+             * }
+             * @media (max-width: 750px) {
+             *     #game-container {
+             *         transform: scale(0.8);
+             *     }
+             * }
+             * @media (max-width: 650px) {
+             *     #game-container {
+             *         transform: scale(0.7);
+             *     }
+             * }
              */
-            #mobile-controls {
-                position: absolute;
-                bottom: 0;
-                left: 50%;
-                transform: translateX(-50%);
-                display: flex;
-                gap: 10px;
-                margin-bottom: 10px;
-                z-index: 9999;
-            }
-            #mobile-controls button {
-                background-color: rgba(0,0,0,0.6);
-                color: white;
-                font-size: 18px;
-                border: 2px solid #fff;
-                border-radius: 8px;
-                padding: 12px 20px;
-                cursor: pointer;
-            }
-            #mobile-controls button:active {
-                background-color: rgba(255,255,255,0.3);
-            }
-
-            /* If on a wider screen (desktop), hide them so they don't block. 
-               You can tweak the breakpoint as you wish. */
-            @media (min-width: 768px) {
-                #mobile-controls {
-                    display: none;
-                }
-            }
         </style>
     </head>
     <body>
@@ -292,42 +481,52 @@ def main():
             <div id="game-info">
                 Score: <span id="score">0</span> | Pizzas: <span id="pizzas-left">5</span>
             </div>
+            
             <div id="streamlit-app-warning">
-                Click inside the game area and press SPACE to start! (Desktop)
+                Click inside the game area and press SPACE to start!
             </div>
-
-            <div id="oven"></div>
-            <div id="pizza"></div>
+            
+            <div id="oven">
+                <div id="oven-top-controls">
+                    <div class="oven-knob" style="left: 20px;"></div>
+                    <div class="oven-knob" style="left: 40px;"></div>
+                    <div class="oven-knob" style="left: 60px;"></div>
+                    <div class="oven-knob" style="left: 80px;"></div>
+                </div>
+                <div id="oven-door">
+                    <div id="oven-window"></div>
+                    <div id="oven-handle"></div>
+                </div>
+            </div>
+            
+            <div id="pizza" style="display: none;"></div>
+            
             <div id="power-bar-container">
                 <div id="power-bar"></div>
             </div>
-
-            <!-- Overlays for instructions, game over, etc. -->
-            <div id="instructions"> 
+            
+            <div id="instructions">
                 <h2>Pizza Toss Game</h2>
-                <p>
-                  On Desktop: Press SPACE to get a pizza + hold/release for throw.<br>
-                  Arrow UP/DOWN move the oven.<br>
-                  On Mobile: Use on-screen buttons below.<br><br>
-                  Collect powerups, hit targets for points!
-                </p>
+                <p>Press SPACE to get a pizza from the oven.<br>
+                Hold SPACE to charge the power bar, release to throw.<br>
+                The longer you hold, the further the pizza will go!<br>
+                Use UP and DOWN arrow keys to move the oven.<br>
+                <br>
+                <span style="color: gold;">S</span>: Slows down power bar<br>
+                <span style="color: #00BFFF;">D</span>: Increases throwing distance<br>
+                <span style="color: #FF6347;">P</span>: Gives you 4 extra pizzas<br>
+                <br>
+                Hit targets to earn points! Collect powerups for bonuses!</p>
                 <button id="start-game">Start Game</button>
             </div>
-
+            
             <div id="game-over">
                 <h2>Game Over!</h2>
                 <p>Your final score: <span id="final-score">0</span></p>
                 <button id="restart-game">Play Again</button>
             </div>
-
-            <!-- MOBILE CONTROLS -->
-            <div id="mobile-controls">
-                <button id="mobile-up">UP</button>
-                <button id="mobile-down">DOWN</button>
-                <button id="mobile-throw">THROW</button>
-            </div>
         </div>
-
+        
         <script>
             document.addEventListener('DOMContentLoaded', function() {
                 // Game variables
@@ -335,108 +534,107 @@ def main():
                 let pizzasLeft = 5;
                 let gameActive = false;
                 let pizzaInHand = false;
+                let powerBarDirection = 1;
+                let powerBarSpeed = 3;
+                let powerBarPos = 0;
                 let pizzaThrown = false;
+                let ovenY = 150; // Initial oven vertical position
+                let ovenMoveSpeed = 5; // Speed at which the oven moves
                 let powerCharging = false;
                 let powerLevel = 0;
                 let chargeInterval;
-                let ovenY = 150;
-                let ovenMoveSpeed = 5;
+                let activePowerups = {
+                    slowBar: false,
+                    extraDistance: false,
+                    extraPizzas: false
+                };
                 let targets = [];
                 let powerups = [];
-                let pizzaX = 80;
-                let pizzaY = 180;
-                let pizzaRotation = 0;
-                let pizzaVelocityX = 0;
-                let pizzaVelocityY = 0;
-                let pizzaGravity = 0.2;
-                let pizzaThrowSound;
-                let targetHitSound;
-                let powerupSound;
-
-                // For keyboard + mobile control
-                const keysPressed = {
-                    ArrowUp: false,
-                    ArrowDown: false
-                };
+                let lastFrameTime = 0;
                 
-                // DOM references
+                // DOM elements
                 const gameContainer = document.getElementById('game-container');
+                const pizza = document.getElementById('pizza');
+                const powerBar = document.getElementById('power-bar');
+                const scoreDisplay = document.getElementById('score');
+                const pizzasLeftDisplay = document.getElementById('pizzas-left');
                 const instructionsPanel = document.getElementById('instructions');
                 const gameOverPanel = document.getElementById('game-over');
                 const finalScoreDisplay = document.getElementById('final-score');
-                const scoreDisplay = document.getElementById('score');
-                const pizzasLeftDisplay = document.getElementById('pizzas-left');
-                const pizza = document.getElementById('pizza');
-                const powerBar = document.getElementById('power-bar');
-                const oven = document.getElementById('oven');
-
-                // Start / restart
+                
+                // Start the game
                 document.getElementById('start-game').addEventListener('click', function() {
                     instructionsPanel.style.display = 'none';
                     startGame();
                 });
                 
+                // Restart the game
                 document.getElementById('restart-game').addEventListener('click', function() {
                     gameOverPanel.style.display = 'none';
                     startGame();
                 });
-
+                
+                // Start the game
                 function startGame() {
                     score = 0;
                     pizzasLeft = 5;
                     gameActive = true;
                     pizzaInHand = false;
                     pizzaThrown = false;
-                    ovenY = 150;
-                    oven.style.bottom = ovenY + 'px';
-
-                    // Remove old targets/powerups
-                    clearTargetsAndPowerups();
+                    ovenY = 150; // Reset oven position
+                    document.getElementById('oven').style.bottom = ovenY + 'px';
                     
-                    // Create new targets
-                    createTargets();
-                    
-                    // Create a couple powerups
-                    setTimeout(createPowerup, 3000);
-                    
-                    updateScore();
-                    updatePizzasLeft();
-                    requestAnimationFrame(gameLoop);
-                }
-                
-                function clearTargetsAndPowerups() {
-                    // Remove existing targets
+                    // Clear old targets and powerups
                     targets.forEach(target => {
-                        if (target.element && target.element.parentNode) {
-                            target.element.parentNode.removeChild(target.element);
+                        if (target.element.parentNode) {
+                            gameContainer.removeChild(target.element);
                         }
                     });
                     targets = [];
                     
-                    // Remove existing powerups
                     powerups.forEach(powerup => {
-                        if (powerup.element && powerup.element.parentNode) {
-                            powerup.element.parentNode.removeChild(powerup.element);
+                        if (powerup.element.parentNode) {
+                            gameContainer.removeChild(powerup.element);
                         }
                     });
                     powerups = [];
+                    
+                    // Create new targets
+                    createTargets();
+                    
+                    // Update displays
+                    updateScore();
+                    updatePizzasLeft();
+                    
+                    // Start animation loop
+                    lastFrameTime = performance.now();
+                    requestAnimationFrame(gameLoop);
                 }
                 
+                // Create targets
                 function createTargets() {
-                    // Create 5 targets at random positions
-                    for (let i = 0; i < 5; i++) {
+                    // Clear existing targets first
+                    targets.forEach(target => {
+                        if (target.element.parentNode) {
+                            gameContainer.removeChild(target.element);
+                        }
+                    });
+                    targets = [];
+                    
+                    // Create new targets at different distances
+                    for (let i = 0; i < 3; i++) {
                         const targetElement = document.createElement('div');
                         targetElement.className = 'target';
                         
-                        // Random position (avoid the left side where oven is)
-                        const x = 250 + Math.random() * (gameContainer.clientWidth - 350);
-                        const y = 50 + Math.random() * (gameContainer.clientHeight - 100);
-                        
-                        // Random point value (10, 20, or 30)
-                        const points = (Math.floor(Math.random() * 3) + 1) * 10;
+                        // Distribute targets at different distances
+                        const x = 350 + (i * 130);
+                        const y = 100 + Math.random() * 350;
                         
                         targetElement.style.left = x + 'px';
-                        targetElement.style.bottom = y + 'px';
+                        targetElement.style.top = y + 'px';
+                        
+                        // Points increase with distance
+                        const points = 10 + (i * 15);
                         targetElement.textContent = points;
                         
                         gameContainer.appendChild(targetElement);
@@ -445,347 +643,547 @@ def main():
                             element: targetElement,
                             x: x,
                             y: y,
-                            width: 80,
-                            height: 80,
-                            points: points
+                            points: points,
+                            hit: false
                         });
                     }
                 }
                 
+                // Create a powerup
                 function createPowerup() {
-                    if (!gameActive) return;
-                    
-                    const powerupElement = document.createElement('div');
-                    powerupElement.className = 'powerup';
-                    
-                    // Random position (avoid left side)
-                    const x = 200 + Math.random() * (gameContainer.clientWidth - 300);
-                    const y = 50 + Math.random() * (gameContainer.clientHeight - 100);
-                    
-                    powerupElement.style.left = x + 'px';
-                    powerupElement.style.bottom = y + 'px';
-                    
-                    gameContainer.appendChild(powerupElement);
-                    
-                    powerups.push({
-                        element: powerupElement,
-                        x: x,
-                        y: y,
-                        width: 40,
-                        height: 40,
-                        type: 'extra-pizza'  // for now just one type
-                    });
-                    
-                    // Schedule next powerup
-                    setTimeout(createPowerup, 8000 + Math.random() * 5000);
-                }
-
-                function updateScore() {
-                    scoreDisplay.textContent = score;
+                    if (Math.random() < 0.5 && powerups.length < 3) {
+                        const powerupElement = document.createElement('div');
+                        powerupElement.className = 'powerup';
+                        
+                        const x = 300 + Math.random() * 400;
+                        const y = 100 + Math.random() * 350;
+                        
+                        powerupElement.style.left = x + 'px';
+                        powerupElement.style.top = y + 'px';
+                        
+                        // Randomly choose powerup type with weights
+                        const rand = Math.random();
+                        let type;
+                        
+                        if (rand < 0.4) {
+                            type = 'S';  // Slow bar
+                            powerupElement.classList.add('powerup-slow');
+                        } else if (rand < 0.8) {
+                            type = 'D';  // Distance booster
+                            powerupElement.classList.add('powerup-distance');
+                        } else {
+                            type = 'P';  // Extra pizzas
+                            powerupElement.classList.add('powerup-pizza');
+                        }
+                        
+                        powerupElement.textContent = type;
+                        
+                        gameContainer.appendChild(powerupElement);
+                        
+                        powerups.push({
+                            element: powerupElement,
+                            x: x,
+                            y: y,
+                            type: type,
+                            collected: false
+                        });
+                    }
                 }
                 
+                // Update the score display with animation
+                function updateScore() {
+                    const oldScore = parseInt(scoreDisplay.textContent);
+                    const newScore = score;
+                    
+                    if (newScore > oldScore) {
+                        let displayScore = oldScore;
+                        const interval = setInterval(() => {
+                            displayScore += 1;
+                            scoreDisplay.textContent = displayScore;
+                            
+                            if (displayScore >= newScore) {
+                                clearInterval(interval);
+                                // Flash effect
+                                scoreDisplay.style.color = '#FFD700';
+                                scoreDisplay.style.textShadow = '0 0 10px rgba(255, 215, 0, 0.7)';
+                                setTimeout(() => {
+                                    scoreDisplay.style.color = 'white';
+                                    scoreDisplay.style.textShadow = 'none';
+                                }, 300);
+                            }
+                        }, 50);
+                    } else {
+                        scoreDisplay.textContent = score;
+                    }
+                }
+                
+                // Update the pizzas left display with animation
                 function updatePizzasLeft() {
                     pizzasLeftDisplay.textContent = pizzasLeft;
+                    // Flash effect
+                    pizzasLeftDisplay.style.color = '#FFD700';
+                    pizzasLeftDisplay.style.textShadow = '0 0 10px rgba(255, 215, 0, 0.7)';
+                    setTimeout(() => {
+                        pizzasLeftDisplay.style.color = 'white';
+                        pizzasLeftDisplay.style.textShadow = 'none';
+                    }, 300);
                 }
                 
+                // Create a fresh pizza with toppings
                 function createPizza() {
-                    if (!pizzaInHand && !pizzaThrown && pizzasLeft > 0) {
-                        pizzasLeft--;
-                        updatePizzasLeft();
-                        
-                        pizzaInHand = true;
-                        pizza.style.display = 'block';
-                        pizzaX = 80;
-                        pizzaY = ovenY + 30;
-                        pizza.style.left = pizzaX + 'px';
-                        pizza.style.bottom = pizzaY + 'px';
-                    }
-                }
-                
-                function throwPizza() {
-                    if (pizzaInHand && !pizzaThrown) {
-                        pizzaThrown = true;
-                        pizzaInHand = false;
-                        
-                        // Apply velocity based on power level
-                        const angle = Math.PI / 4;  // 45 degrees
-                        const power = Math.max(1, powerLevel);
-                        
-                        pizzaVelocityX = Math.cos(angle) * power * 0.6;
-                        pizzaVelocityY = Math.sin(angle) * power * 0.6;
-                        
-                        // Stop charging and reset power bar
-                        stopCharging();
-                    }
-                }
-                
-                function startCharging() {
-                    if (pizzaInHand && !powerCharging) {
-                        powerCharging = true;
-                        powerLevel = 0;
-                        powerBar.style.width = '0%';
-                        
-                        chargeInterval = setInterval(() => {
-                            powerLevel += 2;
-                            if (powerLevel > 100) powerLevel = 100;
-                            powerBar.style.width = powerLevel + '%';
-                        }, 50);
-                    }
-                }
-                
-                function stopCharging() {
-                    if (powerCharging) {
-                        powerCharging = false;
-                        clearInterval(chargeInterval);
-                        powerBar.style.width = '0%';
-                    }
-                }
-                
-                function checkCollisions() {
-                    if (!pizzaThrown) return;
+                    pizza.style.display = 'block';
+                    pizza.style.left = '70px';
+                    pizza.style.bottom = (ovenY + 30) + 'px';
+                    pizza.style.transform = 'rotate(0deg)';
                     
-                    const pizzaRect = {
-                        x: pizzaX,
-                        y: pizzaY,
-                        width: 60,
-                        height: 60
-                    };
-                    
-                    // Check target collisions
-                    for (let i = 0; i < targets.length; i++) {
-                        const target = targets[i];
-                        
-                        if (isColliding(pizzaRect, target)) {
-                            // Hit a target!
-                            score += target.points;
-                            updateScore();
-                            
-                            // Remove the target
-                            target.element.parentNode.removeChild(target.element);
-                            targets.splice(i, 1);
-                            
-                            // Add a new target
-                            setTimeout(() => {
-                                if (gameActive) createTargets();
-                            }, 1000);
-                            
-                            // Remove the pizza
-                            resetPizza();
-                            break;
-                        }
+                    // Clear old toppings
+                    while (pizza.firstChild) {
+                        pizza.removeChild(pizza.firstChild);
                     }
                     
-                    // Check powerup collisions
-                    for (let i = 0; i < powerups.length; i++) {
-                        const powerup = powerups[i];
-                        
-                        if (isColliding(pizzaRect, powerup)) {
-                            // Got a powerup!
-                            if (powerup.type === 'extra-pizza') {
-                                pizzasLeft++;
-                                updatePizzasLeft();
-                            }
-                            
-                            // Remove the powerup
-                            powerup.element.parentNode.removeChild(powerup.element);
-                            powerups.splice(i, 1);
-                            
-                            break;
-                        }
+                    // Add sauce
+                    for (let i = 0; i < 10; i++) {
+                        const sauce = document.createElement('div');
+                        sauce.className = 'sauce';
+                        sauce.style.left = 5 + Math.random() * 50 + 'px';
+                        sauce.style.top = 5 + Math.random() * 50 + 'px';
+                        pizza.appendChild(sauce);
                     }
                     
-                    // Check if pizza is out of bounds
-                    if (pizzaX > gameContainer.clientWidth + 100 || 
-                        pizzaY < -100 || 
-                        pizzaX < -100 || 
-                        pizzaY > gameContainer.clientHeight + 100) {
-                        resetPizza();
+                    // Add cheese
+                    for (let i = 0; i < 12; i++) {
+                        const cheese = document.createElement('div');
+                        cheese.className = 'cheese';
+                        cheese.style.left = 5 + Math.random() * 50 + 'px';
+                        cheese.style.top = 5 + Math.random() * 50 + 'px';
+                        cheese.style.transform = `rotate(${Math.random() * 360}deg)`;
+                        pizza.appendChild(cheese);
+                    }
+                    
+                    // Add pepperonis
+                    for (let i = 0; i < 5; i++) {
+                        const pepperoni = document.createElement('div');
+                        pepperoni.className = 'pepperoni';
+                        pepperoni.style.left = 10 + Math.random() * 40 + 'px';
+                        pepperoni.style.top = 10 + Math.random() * 40 + 'px';
+                        pizza.appendChild(pepperoni);
+                    }
+                    
+                    // Add glow effect
+                    pizza.style.filter = "drop-shadow(0 0 15px rgba(255, 120, 50, 0.8))";
+                    setTimeout(() => {
+                        pizza.style.filter = "drop-shadow(0 2px 5px rgba(0, 0, 0, 0.3))";
+                    }, 1000);
+                }
+                
+                // Reset for next pizza
+                function resetForNextPizza() {
+                    pizza.style.display = 'none';
+                    powerLevel = 0;
+                    powerBar.style.width = '0px';
+                    
+                    // Check if all targets are hit
+                    const allTargetsHit = targets.every(target => target.hit);
+                    if (allTargetsHit) {
+                        createTargets();
                     }
                 }
                 
-                function isColliding(rect1, rect2) {
-                    return (
-                        rect1.x < rect2.x + rect2.width &&
-                        rect1.x + rect1.width > rect2.x &&
-                        rect1.y < rect2.y + rect2.height &&
-                        rect1.y + rect1.height > rect2.y
-                    );
-                }
-                
-                function resetPizza() {
-                    pizzaThrown = false;
+                // End the game
+                function endGame() {
+                    gameActive = false;
                     pizza.style.display = 'none';
                     
-                    // Check if game over
-                    if (pizzasLeft === 0 && !pizzaInHand) {
-                        endGame();
+                    // Confetti
+                    for (let i = 0; i < 100; i++) {
+                        createConfetti();
                     }
+                    
+                    // Show final score
+                    finalScoreDisplay.textContent = '0';
+                    let displayScore = 0;
+                    const scoreInterval = setInterval(() => {
+                        displayScore += Math.max(1, Math.floor(score / 50));
+                        if (displayScore >= score) {
+                            displayScore = score;
+                            clearInterval(scoreInterval);
+                        }
+                        finalScoreDisplay.textContent = displayScore;
+                    }, 30);
+                    
+                    gameOverPanel.style.display = 'block';
                 }
-
-                let lastFrameTime = 0;
-                function gameLoop(timestamp) {
+                
+                // Create confetti
+                function createConfetti() {
+                    const colors = ['#FF5252', '#FFEB3B', '#2196F3', '#4CAF50', '#E040FB', '#FF9800'];
+                    const confetti = document.createElement('div');
+                    const color = colors[Math.floor(Math.random() * colors.length)];
+                    
+                    confetti.style.position = 'absolute';
+                    confetti.style.width = Math.random() * 10 + 5 + 'px';
+                    confetti.style.height = Math.random() * 5 + 5 + 'px';
+                    confetti.style.backgroundColor = color;
+                    confetti.style.borderRadius = Math.random() > 0.5 ? '50%' : '0';
+                    confetti.style.top = '-10px';
+                    confetti.style.left = Math.random() * gameContainer.offsetWidth + 'px';
+                    confetti.style.transform = `rotate(${Math.random() * 360}deg)`;
+                    confetti.style.zIndex = '1000';
+                    confetti.style.opacity = Math.random() + 0.5;
+                    confetti.style.animation = `confettiFall ${Math.random() * 3 + 2}s forwards ease-in`;
+                    
+                    gameContainer.appendChild(confetti);
+                    
+                    setTimeout(() => {
+                        if (confetti.parentNode) {
+                            gameContainer.removeChild(confetti);
+                        }
+                    }, 5000);
+                }
+                
+                // Keyboard controls
+                const keysPressed = {
+                    ArrowUp: false,
+                    ArrowDown: false
+                };
+                
+                document.addEventListener('keydown', function(event) {
                     if (!gameActive) return;
                     
+                    if (event.code === 'ArrowUp' || event.code === 'ArrowDown') {
+                        keysPressed[event.code] = true;
+                        event.preventDefault();
+                    }
+                    
+                    if (event.code === 'Space' && !event.repeat) {
+                        event.preventDefault();
+                        
+                        if (!pizzaInHand && !pizzaThrown) {
+                            createPizza();
+                            pizzaInHand = true;
+                        } else if (pizzaInHand && !pizzaThrown && !powerCharging) {
+                            // Start charging
+                            powerCharging = true;
+                            powerLevel = 0;
+                            
+                            chargeInterval = setInterval(() => {
+                                powerLevel += 2;
+                                if (powerLevel > 300) powerLevel = 300;
+                                powerBar.style.width = powerLevel + 'px';
+                            }, 16);
+                        }
+                    }
+                });
+                
+                document.addEventListener('keyup', function(event) {
+                    if (!gameActive) return;
+                    
+                    if (event.code === 'ArrowUp' || event.code === 'ArrowDown') {
+                        keysPressed[event.code] = false;
+                    }
+                    
+                    if (event.code === 'Space' && powerCharging) {
+                        // Stop charging and throw
+                        clearInterval(chargeInterval);
+                        powerCharging = false;
+                        pizzaThrown = true;
+                        
+                        // Calculate throw power
+                        let throwPower = 0.5 + (powerLevel / 300) * 2.0;
+                        
+                        // Extra distance powerup
+                        if (activePowerups.extraDistance) {
+                            throwPower *= 1.5;
+                        }
+                        
+                        // Animate throw
+                        let pizzaX = 70;
+                        let pizzaY = ovenY + 30;
+                        let pizzaRotation = 0;
+                        let pizzaXSpeed = 7 * throwPower;
+                        let pizzaYSpeed = 2 * throwPower;
+                        let pizzaGravity = 0.15;
+                        
+                        const throwInterval = setInterval(() => {
+                            pizzaX += pizzaXSpeed;
+                            pizzaY += pizzaYSpeed;
+                            pizzaYSpeed -= pizzaGravity;
+                            pizzaRotation += 5;
+                            
+                            pizza.style.left = pizzaX + 'px';
+                            pizza.style.bottom = pizzaY + 'px';
+                            pizza.style.transform = `rotate(${pizzaRotation}deg)`;
+                            
+                            // Out of bounds?
+                            if (pizzaX > 850 || pizzaY < -50) {
+                                clearInterval(throwInterval);
+                                pizzasLeft--;
+                                updatePizzasLeft();
+                            }
+                        }, 16);
+                        
+                        // Reset bar
+                        setTimeout(() => {
+                            powerBar.style.width = '0px';
+                        }, 500);
+                    }
+                });
+                
+                // Main game loop
+                function gameLoop(timestamp) {
                     const deltaTime = timestamp - lastFrameTime;
                     lastFrameTime = timestamp;
                     
-                    // Handle oven movement
+                    if (!gameActive) return;
+                    
+                    // Oven movement
                     if (keysPressed.ArrowUp) {
-                        ovenY = Math.min(ovenY + ovenMoveSpeed, gameContainer.clientHeight - 150);
-                        oven.style.bottom = ovenY + 'px';
+                        ovenY = Math.min(ovenY + ovenMoveSpeed, 400);
+                        document.getElementById('oven').style.bottom = ovenY + 'px';
                         if (pizzaInHand && !pizzaThrown) {
-                            pizzaY = ovenY + 30;
-                            pizza.style.bottom = pizzaY + 'px';
+                            pizza.style.bottom = (ovenY + 30) + 'px';
                         }
                     }
-                    
                     if (keysPressed.ArrowDown) {
                         ovenY = Math.max(ovenY - ovenMoveSpeed, 50);
-                        oven.style.bottom = ovenY + 'px';
+                        document.getElementById('oven').style.bottom = ovenY + 'px';
                         if (pizzaInHand && !pizzaThrown) {
-                            pizzaY = ovenY + 30;
-                            pizza.style.bottom = pizzaY + 'px';
+                            pizza.style.bottom = (ovenY + 30) + 'px';
                         }
                     }
                     
-                    // Update pizza physics if thrown
+                    // If pizza thrown, check collisions, etc.
                     if (pizzaThrown) {
-                        // Update position
-                        pizzaX += pizzaVelocityX * (deltaTime / 16);
-                        pizzaY += pizzaVelocityY * (deltaTime / 16);
+                        const pizzaRect = pizza.getBoundingClientRect();
+                        const pizzaX = parseFloat(pizza.style.left);
+                        const pizzaY = parseFloat(pizza.style.bottom);
                         
-                        // Apply gravity
-                        pizzaVelocityY -= pizzaGravity * (deltaTime / 16);
+                        // Collisions with targets
+                        targets.forEach(target => {
+                            if (!target.hit) {
+                                const targetRect = target.element.getBoundingClientRect();
+                                if (pizzaRect.right > targetRect.left &&
+                                    pizzaRect.left < targetRect.right &&
+                                    pizzaRect.bottom > targetRect.top &&
+                                    pizzaRect.top < targetRect.bottom) {
+                                    // Hit
+                                    target.hit = true;
+                                    target.element.style.backgroundColor = 'rgba(255, 215, 0, 0.7)';
+                                    target.element.style.animation = 'targetHit 0.5s ease';
+                                    score += target.points;
+                                    updateScore();
+                                    
+                                    // Hit effect
+                                    const hitEffect = document.createElement('div');
+                                    hitEffect.textContent = `+${target.points}`;
+                                    hitEffect.style.position = 'absolute';
+                                    hitEffect.style.color = '#FFD700';
+                                    hitEffect.style.fontWeight = 'bold';
+                                    hitEffect.style.fontSize = '24px';
+                                    hitEffect.style.textShadow = '0 0 10px rgba(255, 215, 0, 0.7), 2px 2px 4px rgba(0,0,0,0.5)';
+                                    hitEffect.style.left = `${target.x}px`;
+                                    hitEffect.style.top = `${target.y - 30}px`;
+                                    hitEffect.style.zIndex = '150';
+                                    gameContainer.appendChild(hitEffect);
+                                    
+                                    let hitOpacity = 1;
+                                    let posY = target.y - 30;
+                                    const hitInterval = setInterval(() => {
+                                        hitOpacity -= 0.05;
+                                        posY -= 2;
+                                        hitEffect.style.opacity = hitOpacity;
+                                        hitEffect.style.top = `${posY}px`;
+                                        
+                                        if (hitOpacity <= 0) {
+                                            clearInterval(hitInterval);
+                                            if (hitEffect.parentNode) {
+                                                gameContainer.removeChild(hitEffect);
+                                            }
+                                        }
+                                    }, 40);
+                                    
+                                    // Maybe create powerup
+                                    createPowerup();
+                                }
+                            }
+                        });
                         
-                        // Update rotation
-                        pizzaRotation += 5 * (deltaTime / 16);
+                        // Collisions with powerups
+                        powerups.forEach(powerup => {
+                            if (!powerup.collected) {
+                                const powerupRect = powerup.element.getBoundingClientRect();
+                                if (pizzaRect.right > powerupRect.left &&
+                                    pizzaRect.left < powerupRect.right &&
+                                    pizzaRect.bottom > powerupRect.top &&
+                                    pizzaRect.top < powerupRect.bottom) {
+                                    // Collected
+                                    powerup.collected = true;
+                                    gameContainer.removeChild(powerup.element);
+                                    
+                                    // Apply effect
+                                    if (powerup.type === 'S') {
+                                        activePowerups.slowBar = true;
+                                        setTimeout(() => { activePowerups.slowBar = false; }, 10000);
+                                        
+                                        // Visual effect
+                                        const effectIcon = document.createElement('div');
+                                        effectIcon.innerHTML = '⏱️';
+                                        effectIcon.style.position = 'absolute';
+                                        effectIcon.style.fontSize = '30px';
+                                        effectIcon.style.left = '20px';
+                                        effectIcon.style.bottom = '100px';
+                                        effectIcon.style.zIndex = '200';
+                                        effectIcon.style.filter = 'drop-shadow(0 0 5px gold)';
+                                        effectIcon.style.animation = 'fadeInOut 10s forwards';
+                                        gameContainer.appendChild(effectIcon);
+                                        
+                                        setTimeout(() => {
+                                            if (effectIcon.parentNode) {
+                                                gameContainer.removeChild(effectIcon);
+                                            }
+                                        }, 10000);
+                                        
+                                    } else if (powerup.type === 'D') {
+                                        activePowerups.extraDistance = true;
+                                        setTimeout(() => { activePowerups.extraDistance = false; }, 10000);
+                                        
+                                        const effectIcon = document.createElement('div');
+                                        effectIcon.innerHTML = '🚀';
+                                        effectIcon.style.position = 'absolute';
+                                        effectIcon.style.fontSize = '30px';
+                                        effectIcon.style.left = '60px';
+                                        effectIcon.style.bottom = '100px';
+                                        effectIcon.style.zIndex = '200';
+                                        effectIcon.style.filter = 'drop-shadow(0 0 5px #00BFFF)';
+                                        effectIcon.style.animation = 'fadeInOut 10s forwards';
+                                        gameContainer.appendChild(effectIcon);
+                                        
+                                        setTimeout(() => {
+                                            if (effectIcon.parentNode) {
+                                                gameContainer.removeChild(effectIcon);
+                                            }
+                                        }, 10000);
+                                        
+                                    } else if (powerup.type === 'P') {
+                                        pizzasLeft += 4;
+                                        updatePizzasLeft();
+                                        
+                                        const pizzaAlert = document.createElement('div');
+                                        pizzaAlert.textContent = "+4 PIZZAS!";
+                                        pizzaAlert.style.position = "absolute";
+                                        pizzaAlert.style.color = "#FF6347";
+                                        pizzaAlert.style.fontWeight = "bold";
+                                        pizzaAlert.style.fontSize = "32px";
+                                        pizzaAlert.style.left = "400px";
+                                        pizzaAlert.style.top = "100px";
+                                        pizzaAlert.style.textShadow = "0 0 10px rgba(255,99,71,0.7), 2px 2px 4px rgba(0,0,0,0.5)";
+                                        pizzaAlert.style.zIndex = "200";
+                                        gameContainer.appendChild(pizzaAlert);
+                                        
+                                        for (let i = 0; i < 4; i++) {
+                                            const pizzaIcon = document.createElement('div');
+                                            pizzaIcon.innerHTML = '🍕';
+                                            pizzaIcon.style.position = "absolute";
+                                            pizzaIcon.style.fontSize = "24px";
+                                            pizzaIcon.style.left = `${350 + i * 25}px`;
+                                            pizzaIcon.style.top = "150px";
+                                            pizzaIcon.style.zIndex = "200";
+                                            pizzaIcon.style.animation = `pizzaFall ${0.5 + i * 0.2}s forwards ease-out`;
+                                            gameContainer.appendChild(pizzaIcon);
+                                            
+                                            setTimeout(() => {
+                                                if (pizzaIcon.parentNode) {
+                                                    gameContainer.removeChild(pizzaIcon);
+                                                }
+                                            }, 2000);
+                                        }
+                                        
+                                        let opacity = 1;
+                                        const fadeInterval = setInterval(() => {
+                                            opacity -= 0.05;
+                                            pizzaAlert.style.opacity = opacity;
+                                            
+                                            if (opacity <= 0) {
+                                                clearInterval(fadeInterval);
+                                                if (pizzaAlert.parentNode) {
+                                                    gameContainer.removeChild(pizzaAlert);
+                                                }
+                                            }
+                                        }, 50);
+                                    }
+                                }
+                            }
+                        });
                         
-                        // Update pizza display
-                        pizza.style.left = pizzaX + 'px';
-                        pizza.style.bottom = pizzaY + 'px';
-                        pizza.style.transform = 'rotate(' + pizzaRotation + 'deg)';
-                        
-                        // Check for collisions
-                        checkCollisions();
+                        // If out of bounds
+                        if (pizzaX > 850 || pizzaY < -50) {
+                            pizzaThrown = false;
+                            pizzaInHand = false;
+                            
+                            if (pizzasLeft > 0) {
+                                resetForNextPizza();
+                            } else {
+                                endGame();
+                            }
+                        }
                     }
                     
                     requestAnimationFrame(gameLoop);
                 }
-
-                function endGame() {
-                    gameActive = false;
-                    gameOverPanel.style.display = 'flex';
-                    finalScoreDisplay.textContent = score;
-                }
-
-                // KEYBOARD CONTROLS (desktop)
-                document.addEventListener('keydown', (e) => {
-                    if (e.code === 'ArrowUp' || e.code === 'ArrowDown') {
-                        keysPressed[e.code] = true;
-                        e.preventDefault();
-                    }
-                    if (e.code === 'Space' && !e.repeat) {
-                        e.preventDefault();
-                        onSpaceDown();
-                    }
-                });
                 
-                document.addEventListener('keyup', (e) => {
-                    if (e.code === 'ArrowUp' || e.code === 'ArrowDown') {
-                        keysPressed[e.code] = false;
-                    }
-                    if (e.code === 'Space') {
-                        e.preventDefault();
-                        onSpaceUp();
-                    }
-                });
-
-                // MOBILE CONTROLS
-                const btnUp = document.getElementById('mobile-up');
-                const btnDown = document.getElementById('mobile-down');
-                const btnThrow = document.getElementById('mobile-throw');
-
-                // We use touchstart/touchend or mousedown/mouseup
-                // so the user can press/hold on mobile.
-                function handleUpPressStart() {
-                    keysPressed.ArrowUp = true;
-                }
-                
-                function handleUpPressEnd() {
-                    keysPressed.ArrowUp = false;
-                }
-                
-                function handleDownPressStart() {
-                    keysPressed.ArrowDown = true;
-                }
-                
-                function handleDownPressEnd() {
-                    keysPressed.ArrowDown = false;
-                }
-                
-                function handleThrowPressStart() {
-                    onSpaceDown();
-                }
-                
-                function handleThrowPressEnd() {
-                    onSpaceUp();
-                }
-
-                // Attach to both touch & mouse (for cross-device)
-                btnUp.addEventListener('touchstart', handleUpPressStart);
-                btnUp.addEventListener('touchend', handleUpPressEnd);
-                btnUp.addEventListener('mousedown', handleUpPressStart);
-                btnUp.addEventListener('mouseup', handleUpPressEnd);
-                btnUp.addEventListener('mouseleave', handleUpPressEnd);
-
-                btnDown.addEventListener('touchstart', handleDownPressStart);
-                btnDown.addEventListener('touchend', handleDownPressEnd);
-                btnDown.addEventListener('mousedown', handleDownPressStart);
-                btnDown.addEventListener('mouseup', handleDownPressEnd);
-                btnDown.addEventListener('mouseleave', handleDownPressEnd);
-
-                btnThrow.addEventListener('touchstart', handleThrowPressStart);
-                btnThrow.addEventListener('touchend', handleThrowPressEnd);
-                btnThrow.addEventListener('mousedown', handleThrowPressStart);
-                btnThrow.addEventListener('mouseup', handleThrowPressEnd);
-                btnThrow.addEventListener('mouseleave', handleThrowPressEnd);
-
-                // The logic for pressing Space:
-                function onSpaceDown() {
-                    if (!gameActive) return;
-                    
-                    if (!pizzaInHand && !pizzaThrown) {
-                        createPizza();
-                    }
-                    
-                    if (pizzaInHand && !pizzaThrown) {
-                        startCharging();
-                    }
-                }
-                
-                function onSpaceUp() {
-                    if (!gameActive) return;
-                    
-                    if (pizzaInHand && !pizzaThrown && powerCharging) {
-                        throwPizza();
-                    }
-                }
-
-                // Focus the container
+                // Focus handler
                 window.addEventListener('click', function() {
                     document.getElementById('streamlit-app-warning').style.display = 'none';
                     gameContainer.focus();
                 });
+                
+                // Make sure container can receive keyboard events
                 gameContainer.tabIndex = 0;
-
             });
         </script>
     </body>
     </html>
     """
+    
+    # Simple style override for your Streamlit layout
+    st.markdown(
+        """
+        <style>
+        /* Just for outer container styling in Streamlit. 
+           We don't fix a height here so #game-container can be responsive. */
+        .outer-game-wrapper {
+            width: 100%;
+            max-width: 900px;
+            margin: 0 auto;
+        }
+        </style>
+        """,
+        unsafe_allow_html=True
+    )
 
-    # Now we embed this HTML in Streamlit with a large or "auto" height.
-    components.html(game_html, height=None, scrolling=False)
+    # Instructions in Streamlit
+    st.markdown("""
+    ### How to Play
+    1. Click inside the game area to give it focus  
+    2. Use **SPACE** to get a pizza and charge/throw  
+    3. Use **UP/DOWN** arrow keys to move the oven  
+    4. Hit targets to score points and collect powerups!  
+    """)
+
+    st.markdown('<div class="outer-game-wrapper">', unsafe_allow_html=True)
+
+    # Embed the responsive HTML game
+    # - height=800 or so, to give enough space without scroll
+    # - scrolling=False to hide scrollbars
+    components.html(game_html, height=800, scrolling=False)
+
+    st.markdown('</div>', unsafe_allow_html=True)
+    
+    st.markdown("---")
+    st.markdown("""
+    ### About This Game
+    This is a simple Pizza Toss game built by Avyaan Dani. 
+    """)
 
 
 if __name__ == "__main__":
