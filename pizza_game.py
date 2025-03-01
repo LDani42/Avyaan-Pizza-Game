@@ -9,14 +9,14 @@ def main():
         initial_sidebar_state="collapsed"
     )
 
-    # Hide header, footer, and menu to get a full‐page feel
+    # Hide header, footer, and menu to get a full-page feel
     st.markdown(
         """
         <style>
         /* Hide the Streamlit header, footer, and main menu */
         header {visibility: hidden;}
         footer {visibility: hidden;}
-        MainMenu {visibility: hidden;}
+        #MainMenu {visibility: hidden;}
 
         /* Remove top/bottom padding on main block to get a more "fullscreen" look */
         .css-18e3th9, .css-1d391kg, .css-1v3fvcr {
@@ -28,8 +28,7 @@ def main():
         unsafe_allow_html=True
     )
 
-    # This HTML now includes mobile buttons: #mobile-controls
-    # We'll attach JS event listeners so they replicate "ArrowUp"/"ArrowDown"/"Space".
+    # Full game HTML with complete implementation
     game_html = """
     <!DOCTYPE html>
     <html lang="en">
@@ -68,8 +67,6 @@ def main():
                 overflow: hidden;
             }
 
-            /* The rest of your game styles remain as before... */
-
             #game-info {
                 position: absolute;
                 top: 15px;
@@ -98,7 +95,6 @@ def main():
                 z-index: 1000;
             }
 
-            /* Oven, pizza, targets, powerups, etc. ... same as your previous code. */
             #oven {
                 position: absolute;
                 bottom: 150px;
@@ -114,12 +110,146 @@ def main():
                 filter: drop-shadow(0 5px 10px rgba(0,0,0,0.4));
                 transition: all 0.2s ease;
             }
-            /* ... omitted for brevity, keep the rest of your pizza, target, power bar, etc. CSS ... */
-
-            /*
-             * (Comment out old scaling media queries)
-             * @media (max-width: 850px) {...} 
-             */
+            
+            #pizza {
+                position: absolute;
+                width: 60px;
+                height: 60px;
+                background: #E8BE62;
+                border-radius: 50%;
+                left: 80px;
+                bottom: 180px;
+                transform: rotate(0deg);
+                display: none;
+                z-index: 10;
+            }
+            
+            #pizza::before {
+                content: '';
+                position: absolute;
+                width: 80%;
+                height: 80%;
+                top: 10%;
+                left: 10%;
+                border-radius: 50%;
+                background: #E94F37;
+            }
+            
+            #pizza::after {
+                content: '';
+                position: absolute;
+                width: 10%;
+                height: 10%;
+                background: #FFCF99;
+                border-radius: 50%;
+                top: 45%;
+                left: 20%;
+                box-shadow: 20px -15px 0 #FFCF99, 5px 20px 0 #FFCF99, 
+                            25px 10px 0 #FFCF99, 15px -5px 0 #FFCF99;
+            }
+            
+            .target {
+                position: absolute;
+                width: 80px;
+                height: 80px;
+                background: rgba(255, 255, 255, 0.9);
+                border-radius: 50%;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                font-weight: bold;
+                font-size: 20px;
+                box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+                color: #222;
+                border: 2px solid #222;
+            }
+            
+            .powerup {
+                position: absolute;
+                width: 40px;
+                height: 40px;
+                background: rgba(255, 215, 0, 0.9);
+                border-radius: 8px;
+                box-shadow: 0 0 15px rgba(255, 215, 0, 0.8);
+                animation: pulse 1.5s infinite;
+            }
+            
+            @keyframes pulse {
+                0% { transform: scale(1); }
+                50% { transform: scale(1.1); }
+                100% { transform: scale(1); }
+            }
+            
+            #power-bar-container {
+                position: absolute;
+                left: 50px;
+                bottom: 100px;
+                width: 120px;
+                height: 15px;
+                background: rgba(0, 0, 0, 0.3);
+                border-radius: 10px;
+                overflow: hidden;
+            }
+            
+            #power-bar {
+                width: 0%;
+                height: 100%;
+                background: linear-gradient(90deg, #ff4800, #ff0000);
+                border-radius: 10px;
+                transition: width 0.1s linear;
+            }
+            
+            #instructions, #game-over {
+                position: absolute;
+                top: 0;
+                left: 0;
+                width: 100%;
+                height: 100%;
+                background: rgba(0, 0, 0, 0.8);
+                display: flex;
+                flex-direction: column;
+                align-items: center;
+                justify-content: center;
+                color: white;
+                text-align: center;
+                padding: 20px;
+                z-index: 1000;
+            }
+            
+            #game-over {
+                display: none;
+            }
+            
+            #instructions h2, #game-over h2 {
+                font-size: 28px;
+                margin-bottom: 20px;
+                text-shadow: 0 2px 4px rgba(0, 0, 0, 0.5);
+            }
+            
+            #instructions p {
+                font-size: 16px;
+                margin-bottom: 25px;
+                line-height: 1.6;
+                max-width: 80%;
+            }
+            
+            #instructions button, #game-over button {
+                background: #E94F37;
+                color: white;
+                border: none;
+                padding: 12px 24px;
+                font-size: 18px;
+                border-radius: 30px;
+                cursor: pointer;
+                transition: all 0.2s ease;
+                box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+            }
+            
+            #instructions button:hover, #game-over button:hover {
+                background: #FF6347;
+                transform: translateY(-2px);
+                box-shadow: 0 6px 12px rgba(0, 0, 0, 0.3);
+            }
 
             /* 
              * MOBILE CONTROLS (on-screen buttons)
@@ -155,12 +285,10 @@ def main():
                     display: none;
                 }
             }
-
         </style>
     </head>
     <body>
         <div id="game-container">
-            <!-- The game info, instructions, oven, pizza, etc. go here ... -->
             <div id="game-info">
                 Score: <span id="score">0</span> | Pizzas: <span id="pizzas-left">5</span>
             </div>
@@ -168,11 +296,8 @@ def main():
                 Click inside the game area and press SPACE to start! (Desktop)
             </div>
 
-            <div id="oven">
-                <!-- Oven internals ... -->
-            </div>
-
-            <div id="pizza" style="display: none;"></div>
+            <div id="oven"></div>
+            <div id="pizza"></div>
             <div id="power-bar-container">
                 <div id="power-bar"></div>
             </div>
@@ -205,13 +330,7 @@ def main():
 
         <script>
             document.addEventListener('DOMContentLoaded', function() {
-                /*
-                 * Original JS code for game logic, variables, 
-                 * targets, createPizza, startGame, etc... 
-                 * (We won't re-paste it all here for brevity,
-                 *  but keep your entire logic from before.)
-                 */
-                
+                // Game variables
                 let score = 0;
                 let pizzasLeft = 5;
                 let gameActive = false;
@@ -222,6 +341,17 @@ def main():
                 let chargeInterval;
                 let ovenY = 150;
                 let ovenMoveSpeed = 5;
+                let targets = [];
+                let powerups = [];
+                let pizzaX = 80;
+                let pizzaY = 180;
+                let pizzaRotation = 0;
+                let pizzaVelocityX = 0;
+                let pizzaVelocityY = 0;
+                let pizzaGravity = 0.2;
+                let pizzaThrowSound;
+                let targetHitSound;
+                let powerupSound;
 
                 // For keyboard + mobile control
                 const keysPressed = {
@@ -238,12 +368,14 @@ def main():
                 const pizzasLeftDisplay = document.getElementById('pizzas-left');
                 const pizza = document.getElementById('pizza');
                 const powerBar = document.getElementById('power-bar');
+                const oven = document.getElementById('oven');
 
                 // Start / restart
                 document.getElementById('start-game').addEventListener('click', function() {
                     instructionsPanel.style.display = 'none';
                     startGame();
                 });
+                
                 document.getElementById('restart-game').addEventListener('click', function() {
                     gameOverPanel.style.display = 'none';
                     startGame();
@@ -256,61 +388,298 @@ def main():
                     pizzaInHand = false;
                     pizzaThrown = false;
                     ovenY = 150;
-                    document.getElementById('oven').style.bottom = ovenY + 'px';
+                    oven.style.bottom = ovenY + 'px';
 
-                    // remove old targets/powerups if needed
-                    // create new targets
-                    // etc.
+                    // Remove old targets/powerups
+                    clearTargetsAndPowerups();
+                    
+                    // Create new targets
+                    createTargets();
+                    
+                    // Create a couple powerups
+                    setTimeout(createPowerup, 3000);
+                    
                     updateScore();
                     updatePizzasLeft();
                     requestAnimationFrame(gameLoop);
+                }
+                
+                function clearTargetsAndPowerups() {
+                    // Remove existing targets
+                    targets.forEach(target => {
+                        if (target.element && target.element.parentNode) {
+                            target.element.parentNode.removeChild(target.element);
+                        }
+                    });
+                    targets = [];
+                    
+                    // Remove existing powerups
+                    powerups.forEach(powerup => {
+                        if (powerup.element && powerup.element.parentNode) {
+                            powerup.element.parentNode.removeChild(powerup.element);
+                        }
+                    });
+                    powerups = [];
+                }
+                
+                function createTargets() {
+                    // Create 5 targets at random positions
+                    for (let i = 0; i < 5; i++) {
+                        const targetElement = document.createElement('div');
+                        targetElement.className = 'target';
+                        
+                        // Random position (avoid the left side where oven is)
+                        const x = 250 + Math.random() * (gameContainer.clientWidth - 350);
+                        const y = 50 + Math.random() * (gameContainer.clientHeight - 100);
+                        
+                        // Random point value (10, 20, or 30)
+                        const points = (Math.floor(Math.random() * 3) + 1) * 10;
+                        
+                        targetElement.style.left = x + 'px';
+                        targetElement.style.bottom = y + 'px';
+                        targetElement.textContent = points;
+                        
+                        gameContainer.appendChild(targetElement);
+                        
+                        targets.push({
+                            element: targetElement,
+                            x: x,
+                            y: y,
+                            width: 80,
+                            height: 80,
+                            points: points
+                        });
+                    }
+                }
+                
+                function createPowerup() {
+                    if (!gameActive) return;
+                    
+                    const powerupElement = document.createElement('div');
+                    powerupElement.className = 'powerup';
+                    
+                    // Random position (avoid left side)
+                    const x = 200 + Math.random() * (gameContainer.clientWidth - 300);
+                    const y = 50 + Math.random() * (gameContainer.clientHeight - 100);
+                    
+                    powerupElement.style.left = x + 'px';
+                    powerupElement.style.bottom = y + 'px';
+                    
+                    gameContainer.appendChild(powerupElement);
+                    
+                    powerups.push({
+                        element: powerupElement,
+                        x: x,
+                        y: y,
+                        width: 40,
+                        height: 40,
+                        type: 'extra-pizza'  // for now just one type
+                    });
+                    
+                    // Schedule next powerup
+                    setTimeout(createPowerup, 8000 + Math.random() * 5000);
                 }
 
                 function updateScore() {
                     scoreDisplay.textContent = score;
                 }
+                
                 function updatePizzasLeft() {
                     pizzasLeftDisplay.textContent = pizzasLeft;
                 }
-
-                // [Add all your game logic for createPizza, throwPizza, collisions, etc. here]
-                // For example:
+                
+                function createPizza() {
+                    if (!pizzaInHand && !pizzaThrown && pizzasLeft > 0) {
+                        pizzasLeft--;
+                        updatePizzasLeft();
+                        
+                        pizzaInHand = true;
+                        pizza.style.display = 'block';
+                        pizzaX = 80;
+                        pizzaY = ovenY + 30;
+                        pizza.style.left = pizzaX + 'px';
+                        pizza.style.bottom = pizzaY + 'px';
+                    }
+                }
+                
+                function throwPizza() {
+                    if (pizzaInHand && !pizzaThrown) {
+                        pizzaThrown = true;
+                        pizzaInHand = false;
+                        
+                        // Apply velocity based on power level
+                        const angle = Math.PI / 4;  // 45 degrees
+                        const power = Math.max(1, powerLevel);
+                        
+                        pizzaVelocityX = Math.cos(angle) * power * 0.6;
+                        pizzaVelocityY = Math.sin(angle) * power * 0.6;
+                        
+                        // Stop charging and reset power bar
+                        stopCharging();
+                    }
+                }
+                
+                function startCharging() {
+                    if (pizzaInHand && !powerCharging) {
+                        powerCharging = true;
+                        powerLevel = 0;
+                        powerBar.style.width = '0%';
+                        
+                        chargeInterval = setInterval(() => {
+                            powerLevel += 2;
+                            if (powerLevel > 100) powerLevel = 100;
+                            powerBar.style.width = powerLevel + '%';
+                        }, 50);
+                    }
+                }
+                
+                function stopCharging() {
+                    if (powerCharging) {
+                        powerCharging = false;
+                        clearInterval(chargeInterval);
+                        powerBar.style.width = '0%';
+                    }
+                }
+                
+                function checkCollisions() {
+                    if (!pizzaThrown) return;
+                    
+                    const pizzaRect = {
+                        x: pizzaX,
+                        y: pizzaY,
+                        width: 60,
+                        height: 60
+                    };
+                    
+                    // Check target collisions
+                    for (let i = 0; i < targets.length; i++) {
+                        const target = targets[i];
+                        
+                        if (isColliding(pizzaRect, target)) {
+                            // Hit a target!
+                            score += target.points;
+                            updateScore();
+                            
+                            // Remove the target
+                            target.element.parentNode.removeChild(target.element);
+                            targets.splice(i, 1);
+                            
+                            // Add a new target
+                            setTimeout(() => {
+                                if (gameActive) createTargets();
+                            }, 1000);
+                            
+                            // Remove the pizza
+                            resetPizza();
+                            break;
+                        }
+                    }
+                    
+                    // Check powerup collisions
+                    for (let i = 0; i < powerups.length; i++) {
+                        const powerup = powerups[i];
+                        
+                        if (isColliding(pizzaRect, powerup)) {
+                            // Got a powerup!
+                            if (powerup.type === 'extra-pizza') {
+                                pizzasLeft++;
+                                updatePizzasLeft();
+                            }
+                            
+                            // Remove the powerup
+                            powerup.element.parentNode.removeChild(powerup.element);
+                            powerups.splice(i, 1);
+                            
+                            break;
+                        }
+                    }
+                    
+                    // Check if pizza is out of bounds
+                    if (pizzaX > gameContainer.clientWidth + 100 || 
+                        pizzaY < -100 || 
+                        pizzaX < -100 || 
+                        pizzaY > gameContainer.clientHeight + 100) {
+                        resetPizza();
+                    }
+                }
+                
+                function isColliding(rect1, rect2) {
+                    return (
+                        rect1.x < rect2.x + rect2.width &&
+                        rect1.x + rect1.width > rect2.x &&
+                        rect1.y < rect2.y + rect2.height &&
+                        rect1.y + rect1.height > rect2.y
+                    );
+                }
+                
+                function resetPizza() {
+                    pizzaThrown = false;
+                    pizza.style.display = 'none';
+                    
+                    // Check if game over
+                    if (pizzasLeft === 0 && !pizzaInHand) {
+                        endGame();
+                    }
+                }
 
                 let lastFrameTime = 0;
                 function gameLoop(timestamp) {
                     if (!gameActive) return;
+                    
                     const deltaTime = timestamp - lastFrameTime;
                     lastFrameTime = timestamp;
-
-                    // handle oven movement
+                    
+                    // Handle oven movement
                     if (keysPressed.ArrowUp) {
-                        ovenY = Math.min(ovenY + ovenMoveSpeed, 400);
-                        document.getElementById('oven').style.bottom = ovenY + 'px';
+                        ovenY = Math.min(ovenY + ovenMoveSpeed, gameContainer.clientHeight - 150);
+                        oven.style.bottom = ovenY + 'px';
                         if (pizzaInHand && !pizzaThrown) {
-                            pizza.style.bottom = (ovenY + 30) + 'px';
+                            pizzaY = ovenY + 30;
+                            pizza.style.bottom = pizzaY + 'px';
                         }
                     }
+                    
                     if (keysPressed.ArrowDown) {
                         ovenY = Math.max(ovenY - ovenMoveSpeed, 50);
-                        document.getElementById('oven').style.bottom = ovenY + 'px';
+                        oven.style.bottom = ovenY + 'px';
                         if (pizzaInHand && !pizzaThrown) {
-                            pizza.style.bottom = (ovenY + 30) + 'px';
+                            pizzaY = ovenY + 30;
+                            pizza.style.bottom = pizzaY + 'px';
                         }
                     }
-
-                    // throw animation + collision checks ...
+                    
+                    // Update pizza physics if thrown
+                    if (pizzaThrown) {
+                        // Update position
+                        pizzaX += pizzaVelocityX * (deltaTime / 16);
+                        pizzaY += pizzaVelocityY * (deltaTime / 16);
+                        
+                        // Apply gravity
+                        pizzaVelocityY -= pizzaGravity * (deltaTime / 16);
+                        
+                        // Update rotation
+                        pizzaRotation += 5 * (deltaTime / 16);
+                        
+                        // Update pizza display
+                        pizza.style.left = pizzaX + 'px';
+                        pizza.style.bottom = pizzaY + 'px';
+                        pizza.style.transform = 'rotate(' + pizzaRotation + 'deg)';
+                        
+                        // Check for collisions
+                        checkCollisions();
+                    }
+                    
                     requestAnimationFrame(gameLoop);
                 }
 
                 function endGame() {
                     gameActive = false;
-                    gameOverPanel.style.display = 'block';
+                    gameOverPanel.style.display = 'flex';
                     finalScoreDisplay.textContent = score;
                 }
 
                 // KEYBOARD CONTROLS (desktop)
                 document.addEventListener('keydown', (e) => {
-                    if (!gameActive) return;
                     if (e.code === 'ArrowUp' || e.code === 'ArrowDown') {
                         keysPressed[e.code] = true;
                         e.preventDefault();
@@ -320,8 +689,8 @@ def main():
                         onSpaceDown();
                     }
                 });
+                
                 document.addEventListener('keyup', (e) => {
-                    if (!gameActive) return;
                     if (e.code === 'ArrowUp' || e.code === 'ArrowDown') {
                         keysPressed[e.code] = false;
                     }
@@ -332,7 +701,6 @@ def main():
                 });
 
                 // MOBILE CONTROLS
-                // We'll replicate the same events as arrow + space.
                 const btnUp = document.getElementById('mobile-up');
                 const btnDown = document.getElementById('mobile-down');
                 const btnThrow = document.getElementById('mobile-throw');
@@ -340,29 +708,30 @@ def main():
                 // We use touchstart/touchend or mousedown/mouseup
                 // so the user can press/hold on mobile.
                 function handleUpPressStart() {
-                    if (gameActive) keysPressed.ArrowUp = true;
+                    keysPressed.ArrowUp = true;
                 }
+                
                 function handleUpPressEnd() {
                     keysPressed.ArrowUp = false;
                 }
+                
                 function handleDownPressStart() {
-                    if (gameActive) keysPressed.ArrowDown = true;
+                    keysPressed.ArrowDown = true;
                 }
+                
                 function handleDownPressEnd() {
                     keysPressed.ArrowDown = false;
                 }
+                
                 function handleThrowPressStart() {
-                    if (gameActive) {
-                        onSpaceDown();
-                    }
+                    onSpaceDown();
                 }
+                
                 function handleThrowPressEnd() {
-                    if (gameActive) {
-                        onSpaceUp();
-                    }
+                    onSpaceUp();
                 }
 
-                // Attach to both touch & mouse (for cross‐device)
+                // Attach to both touch & mouse (for cross-device)
                 btnUp.addEventListener('touchstart', handleUpPressStart);
                 btnUp.addEventListener('touchend', handleUpPressEnd);
                 btnUp.addEventListener('mousedown', handleUpPressStart);
@@ -381,12 +750,25 @@ def main():
                 btnThrow.addEventListener('mouseup', handleThrowPressEnd);
                 btnThrow.addEventListener('mouseleave', handleThrowPressEnd);
 
-                // The same logic you had for pressing Space:
+                // The logic for pressing Space:
                 function onSpaceDown() {
-                    // e.g. create pizza or start charging
+                    if (!gameActive) return;
+                    
+                    if (!pizzaInHand && !pizzaThrown) {
+                        createPizza();
+                    }
+                    
+                    if (pizzaInHand && !pizzaThrown) {
+                        startCharging();
+                    }
                 }
+                
                 function onSpaceUp() {
-                    // e.g. release throw
+                    if (!gameActive) return;
+                    
+                    if (pizzaInHand && !pizzaThrown && powerCharging) {
+                        throwPizza();
+                    }
                 }
 
                 // Focus the container
@@ -403,8 +785,6 @@ def main():
     """
 
     # Now we embed this HTML in Streamlit with a large or "auto" height.
-    # If you want absolutely no scroll, pick a large fixed height (like 1500)
-    # or even `height=None, scrolling=False` to let CSS manage the internal size.
     components.html(game_html, height=None, scrolling=False)
 
 
