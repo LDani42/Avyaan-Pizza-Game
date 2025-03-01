@@ -30,11 +30,18 @@ def main():
                 max-width: 800px;
                 aspect-ratio: 4 / 3;
                 margin: 0 auto;
-                background: linear-gradient(135deg, #67B8DE, #0396FF);
+                background: linear-gradient(124deg, #ff2400, #e81d1d, #e8b71d, #e3e81d, #1de840, #1ddde8, #2b1de8, #dd00f3, #dd00f3);
+                background-size: 1800% 1800%;
+                animation: rainbow 18s ease infinite;
                 border-radius: 12px;
                 box-shadow: 0 10px 30px rgba(0, 0, 0, 0.4), 
                             0 0 100px rgba(255, 255, 255, 0.2);
                 overflow: hidden;
+            }
+            @keyframes rainbow { 
+                0% { background-position: 0% 82% }
+                50% { background-position: 100% 19% }
+                100% { background-position: 0% 82% }
             }
             #game-info {
                 position: absolute;
