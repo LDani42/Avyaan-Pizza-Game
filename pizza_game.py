@@ -1111,7 +1111,7 @@ game_html = """
 </body>
 </html>
 """
-    
+
     # Simple style override for your Streamlit layout
     st.markdown(
         """
