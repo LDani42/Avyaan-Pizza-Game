@@ -458,14 +458,14 @@ def main():
                 <h2>Pizza Toss Game</h2>
                 <p>Press SPACE to get a pizza from the oven.<br>
                 Hold SPACE to charge the power bar, release to throw.<br>
-                The longer you hold, the further the pizza will go!<br>
-                Use UP and DOWN arrow keys to move the oven.<br>
+                The longer you hold, the further it will go!<br>
+                Use UP and DOWN keys to move the oven.<br>
                 <br>
                 <span style="color: gold;">S</span>: Slows down power bar<br>
                 <span style="color: #00BFFF;">D</span>: Increases throwing distance<br>
                 <span style="color: #FF6347;">P</span>: Gives you 4 extra pizzas<br>
                 <br>
-                Hit targets to earn points! Collect powerups for bonuses!</p>
+                Hit targets to earn points! Get powerups for bonuses!</p>
                 <button id="start-game">Start Game</button>
             </div>
 
