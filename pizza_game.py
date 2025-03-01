@@ -3,12 +3,12 @@ import streamlit.components.v1 as components
 
 def main():
     st.set_page_config(
-        page_title="Pizza Toss Game",
+        page_title="Avyaan's Pizza Toss Game",
         layout="wide",
         initial_sidebar_state="collapsed"
     )
 
-    st.title("Pizza Toss Game")
+    st.title("Avyaan's Pizza Toss Game")
     
     # HTML/JS code for the game - properly formatted as a string for Streamlit
     game_html = """
@@ -920,3 +920,27 @@ def main():
                     
                     gameOverPanel.style.display = 'block';
                 }
+    </html>
+    """  # <-- Make sure this closing triple quote is here
+    
+    # Simple style override for your Streamlit layout
+    st.markdown(
+        """
+        <style>
+        /* Outer container styling in Streamlit that's responsive */
+        .outer-game-wrapper {
+            width: 100%;
+            max-width: 900px;
+            margin: 0 auto;
+        }
+        
+        /* Make text more readable on mobile */
+        @media (max-width: 768px) {
+            .mobile-instructions {
+                font-size: 16px !important;
+            }
+        }
+        </style>
+        """,
+        unsafe_allow_html=True
+    )
