@@ -9,7 +9,7 @@ def main():
 
     st.title("Pizza Toss Game")
     
-    # Create HTML string for the game - properly escaping all JS code
+    # HTML/JS code for the game
     game_html = """
     <!DOCTYPE html>
     <html lang="en">
@@ -29,10 +29,19 @@ def main():
                 overflow: hidden;
             }
             
+            /* 
+             * Make #game-container fluid & responsive:
+             * - width: 100% (so it fills parent)
+             * - max-width: 800px (prevent being too large on desktops)
+             * - aspect-ratio: 4/3 (keeps the shape of 800x600)
+             * - margin: 0 auto (center if there's leftover width)
+             */
             #game-container {
                 position: relative;
-                width: 800px;
-                height: 600px;
+                width: 100%;
+                max-width: 800px;
+                aspect-ratio: 4 / 3;
+                margin: 0 auto;
                 background: linear-gradient(135deg, #67B8DE, #0396FF);
                 border: none;
                 border-radius: 12px;
@@ -444,25 +453,27 @@ def main():
                 font-size: 14px;
                 z-index: 1000;
             }
-            
-            @media (max-width: 850px) {
-                #game-container {
-                    transform: scale(0.9);
-                    transform-origin: top center;
-                }
-            }
-            
-            @media (max-width: 750px) {
-                #game-container {
-                    transform: scale(0.8);
-                }
-            }
-            
-            @media (max-width: 650px) {
-                #game-container {
-                    transform: scale(0.7);
-                }
-            }
+
+            /* 
+             * COMMENTED OUT: old transform-based scaling (no longer needed with aspect-ratio).
+             *
+             * @media (max-width: 850px) {
+             *     #game-container {
+             *         transform: scale(0.9);
+             *         transform-origin: top center;
+             *     }
+             * }
+             * @media (max-width: 750px) {
+             *     #game-container {
+             *         transform: scale(0.8);
+             *     }
+             * }
+             * @media (max-width: 650px) {
+             *     #game-container {
+             *         transform: scale(0.7);
+             *     }
+             * }
+             */
         </style>
     </head>
     <body>
@@ -640,7 +651,7 @@ def main():
                 
                 // Create a powerup
                 function createPowerup() {
-                    if (Math.random() < 0.5 && powerups.length < 3) {  // Increased chance and max powerups
+                    if (Math.random() < 0.5 && powerups.length < 3) {
                         const powerupElement = document.createElement('div');
                         powerupElement.className = 'powerup';
                         
@@ -681,11 +692,9 @@ def main():
                 
                 // Update the score display with animation
                 function updateScore() {
-                    // Save old score for animation
                     const oldScore = parseInt(scoreDisplay.textContent);
                     const newScore = score;
                     
-                    // Animate score counting up
                     if (newScore > oldScore) {
                         let displayScore = oldScore;
                         const interval = setInterval(() => {
@@ -694,8 +703,7 @@ def main():
                             
                             if (displayScore >= newScore) {
                                 clearInterval(interval);
-                                
-                                // Flash effect on score
+                                // Flash effect
                                 scoreDisplay.style.color = '#FFD700';
                                 scoreDisplay.style.textShadow = '0 0 10px rgba(255, 215, 0, 0.7)';
                                 setTimeout(() => {
@@ -712,7 +720,6 @@ def main():
                 // Update the pizzas left display with animation
                 function updatePizzasLeft() {
                     pizzasLeftDisplay.textContent = pizzasLeft;
-                    
                     // Flash effect
                     pizzasLeftDisplay.style.color = '#FFD700';
                     pizzasLeftDisplay.style.textShadow = '0 0 10px rgba(255, 215, 0, 0.7)';
@@ -726,7 +733,7 @@ def main():
                 function createPizza() {
                     pizza.style.display = 'block';
                     pizza.style.left = '70px';
-                    pizza.style.bottom = (ovenY + 30) + 'px'; // Position based on oven location
+                    pizza.style.bottom = (ovenY + 30) + 'px';
                     pizza.style.transform = 'rotate(0deg)';
                     
                     // Clear old toppings
@@ -734,7 +741,7 @@ def main():
                         pizza.removeChild(pizza.firstChild);
                     }
                     
-                    // Add sauce splatters
+                    // Add sauce
                     for (let i = 0; i < 10; i++) {
                         const sauce = document.createElement('div');
                         sauce.className = 'sauce';
@@ -743,7 +750,7 @@ def main():
                         pizza.appendChild(sauce);
                     }
                     
-                    // Add cheese bits
+                    // Add cheese
                     for (let i = 0; i < 12; i++) {
                         const cheese = document.createElement('div');
                         cheese.className = 'cheese';
@@ -753,7 +760,7 @@ def main():
                         pizza.appendChild(cheese);
                     }
                     
-                    // Add random toppings (pepperonis)
+                    // Add pepperonis
                     for (let i = 0; i < 5; i++) {
                         const pepperoni = document.createElement('div');
                         pepperoni.className = 'pepperoni';
@@ -762,7 +769,7 @@ def main():
                         pizza.appendChild(pepperoni);
                     }
                     
-                    // Add a glowing effect to indicate it's fresh from the oven
+                    // Add glow effect
                     pizza.style.filter = "drop-shadow(0 0 15px rgba(255, 120, 50, 0.8))";
                     setTimeout(() => {
                         pizza.style.filter = "drop-shadow(0 2px 5px rgba(0, 0, 0, 0.3))";
@@ -778,7 +785,6 @@ def main():
                     // Check if all targets are hit
                     const allTargetsHit = targets.every(target => target.hit);
                     if (allTargetsHit) {
-                        // Create new targets
                         createTargets();
                     }
                 }
@@ -788,12 +794,12 @@ def main():
                     gameActive = false;
                     pizza.style.display = 'none';
                     
-                    // Add confetti effect
+                    // Confetti
                     for (let i = 0; i < 100; i++) {
                         createConfetti();
                     }
                     
-                    // Show final score with animation
+                    // Show final score
                     finalScoreDisplay.textContent = '0';
                     let displayScore = 0;
                     const scoreInterval = setInterval(() => {
@@ -808,7 +814,7 @@ def main():
                     gameOverPanel.style.display = 'block';
                 }
                 
-                // Create a single confetti piece
+                // Create confetti
                 function createConfetti() {
                     const colors = ['#FF5252', '#FFEB3B', '#2196F3', '#4CAF50', '#E040FB', '#FF9800'];
                     const confetti = document.createElement('div');
@@ -828,7 +834,6 @@ def main():
                     
                     gameContainer.appendChild(confetti);
                     
-                    // Remove confetti after animation
                     setTimeout(() => {
                         if (confetti.parentNode) {
                             gameContainer.removeChild(confetti);
@@ -836,7 +841,7 @@ def main():
                     }, 5000);
                 }
                 
-                // Keyboard controls for oven movement
+                // Keyboard controls
                 const keysPressed = {
                     ArrowUp: false,
                     ArrowDown: false
@@ -854,18 +859,16 @@ def main():
                         event.preventDefault();
                         
                         if (!pizzaInHand && !pizzaThrown) {
-                            // Get a pizza from the oven
                             createPizza();
                             pizzaInHand = true;
                         } else if (pizzaInHand && !pizzaThrown && !powerCharging) {
-                            // Start charging the power bar
+                            // Start charging
                             powerCharging = true;
                             powerLevel = 0;
                             
                             chargeInterval = setInterval(() => {
                                 powerLevel += 2;
                                 if (powerLevel > 300) powerLevel = 300;
-                                
                                 powerBar.style.width = powerLevel + 'px';
                             }, 16);
                         }
@@ -880,24 +883,22 @@ def main():
                     }
                     
                     if (event.code === 'Space' && powerCharging) {
-                        event.preventDefault();
-                        
-                        // Stop charging and throw the pizza
+                        // Stop charging and throw
                         clearInterval(chargeInterval);
                         powerCharging = false;
                         pizzaThrown = true;
                         
-                        // Calculate throw power based on power level (0-300)
+                        // Calculate throw power
                         let throwPower = 0.5 + (powerLevel / 300) * 2.0;
                         
-                        // Apply extra distance powerup
+                        // Extra distance powerup
                         if (activePowerups.extraDistance) {
                             throwPower *= 1.5;
                         }
                         
-                        // Animate the thrown pizza
+                        // Animate throw
                         let pizzaX = 70;
-                        let pizzaY = ovenY + 30; // Use oven position to determine starting Y
+                        let pizzaY = ovenY + 30;
                         let pizzaRotation = 0;
                         let pizzaXSpeed = 7 * throwPower;
                         let pizzaYSpeed = 2 * throwPower;
@@ -913,7 +914,7 @@ def main():
                             pizza.style.bottom = pizzaY + 'px';
                             pizza.style.transform = `rotate(${pizzaRotation}deg)`;
                             
-                            // Check if out of bounds
+                            // Out of bounds?
                             if (pizzaX > 850 || pizzaY < -50) {
                                 clearInterval(throwInterval);
                                 pizzasLeft--;
@@ -921,7 +922,7 @@ def main():
                             }
                         }, 16);
                         
-                        // Reset power bar for visual feedback
+                        // Reset bar
                         setTimeout(() => {
                             powerBar.style.width = '0px';
                         }, 500);
@@ -930,53 +931,49 @@ def main():
                 
                 // Main game loop
                 function gameLoop(timestamp) {
-                    // Calculate delta time
                     const deltaTime = timestamp - lastFrameTime;
                     lastFrameTime = timestamp;
                     
                     if (!gameActive) return;
                     
-                    // Handle oven movement
+                    // Oven movement
                     if (keysPressed.ArrowUp) {
-                        ovenY = Math.min(ovenY + ovenMoveSpeed, 400); // Limit upward movement
+                        ovenY = Math.min(ovenY + ovenMoveSpeed, 400);
                         document.getElementById('oven').style.bottom = ovenY + 'px';
                         if (pizzaInHand && !pizzaThrown) {
-                            // Update pizza position with oven
                             pizza.style.bottom = (ovenY + 30) + 'px';
                         }
                     }
                     if (keysPressed.ArrowDown) {
-                        ovenY = Math.max(ovenY - ovenMoveSpeed, 50); // Limit downward movement
+                        ovenY = Math.max(ovenY - ovenMoveSpeed, 50);
                         document.getElementById('oven').style.bottom = ovenY + 'px';
                         if (pizzaInHand && !pizzaThrown) {
-                            // Update pizza position with oven
                             pizza.style.bottom = (ovenY + 30) + 'px';
                         }
                     }
                     
-                    // Move thrown pizza
+                    // If pizza thrown, check collisions, etc.
                     if (pizzaThrown) {
                         const pizzaRect = pizza.getBoundingClientRect();
                         const pizzaX = parseFloat(pizza.style.left);
                         const pizzaY = parseFloat(pizza.style.bottom);
                         
-                        // Check for collisions with targets
+                        // Collisions with targets
                         targets.forEach(target => {
                             if (!target.hit) {
                                 const targetRect = target.element.getBoundingClientRect();
-                                
                                 if (pizzaRect.right > targetRect.left &&
                                     pizzaRect.left < targetRect.right &&
                                     pizzaRect.bottom > targetRect.top &&
                                     pizzaRect.top < targetRect.bottom) {
-                                    // Hit target
+                                    // Hit
                                     target.hit = true;
                                     target.element.style.backgroundColor = 'rgba(255, 215, 0, 0.7)';
                                     target.element.style.animation = 'targetHit 0.5s ease';
                                     score += target.points;
                                     updateScore();
                                     
-                                    // Add hit effect
+                                    // Hit effect
                                     const hitEffect = document.createElement('div');
                                     hitEffect.textContent = `+${target.points}`;
                                     hitEffect.style.position = 'absolute';
@@ -989,7 +986,6 @@ def main():
                                     hitEffect.style.zIndex = '150';
                                     gameContainer.appendChild(hitEffect);
                                     
-                                    // Animate and remove hit effect
                                     let hitOpacity = 1;
                                     let posY = target.y - 30;
                                     const hitInterval = setInterval(() => {
@@ -1006,31 +1002,30 @@ def main():
                                         }
                                     }, 40);
                                     
-                                    // Maybe create a powerup
+                                    // Maybe create powerup
                                     createPowerup();
                                 }
                             }
                         });
                         
-                        // Check for collisions with powerups
+                        // Collisions with powerups
                         powerups.forEach(powerup => {
                             if (!powerup.collected) {
                                 const powerupRect = powerup.element.getBoundingClientRect();
-                                
                                 if (pizzaRect.right > powerupRect.left &&
                                     pizzaRect.left < powerupRect.right &&
                                     pizzaRect.bottom > powerupRect.top &&
                                     pizzaRect.top < powerupRect.bottom) {
-                                    // Collect powerup
+                                    // Collected
                                     powerup.collected = true;
                                     gameContainer.removeChild(powerup.element);
                                     
-                                    // Apply powerup effect
+                                    // Apply effect
                                     if (powerup.type === 'S') {
                                         activePowerups.slowBar = true;
                                         setTimeout(() => { activePowerups.slowBar = false; }, 10000);
                                         
-                                        // Add visual effect
+                                        // Visual effect
                                         const effectIcon = document.createElement('div');
                                         effectIcon.innerHTML = '⏱️';
                                         effectIcon.style.position = 'absolute';
@@ -1052,7 +1047,6 @@ def main():
                                         activePowerups.extraDistance = true;
                                         setTimeout(() => { activePowerups.extraDistance = false; }, 10000);
                                         
-                                        // Add visual effect
                                         const effectIcon = document.createElement('div');
                                         effectIcon.innerHTML = '🚀';
                                         effectIcon.style.position = 'absolute';
@@ -1071,11 +1065,9 @@ def main():
                                         }, 10000);
                                         
                                     } else if (powerup.type === 'P') {
-                                        // Add 4 extra pizzas
                                         pizzasLeft += 4;
                                         updatePizzasLeft();
                                         
-                                        // Show animation effect
                                         const pizzaAlert = document.createElement('div');
                                         pizzaAlert.textContent = "+4 PIZZAS!";
                                         pizzaAlert.style.position = "absolute";
@@ -1088,7 +1080,6 @@ def main():
                                         pizzaAlert.style.zIndex = "200";
                                         gameContainer.appendChild(pizzaAlert);
                                         
-                                        // Add pizza icons animation
                                         for (let i = 0; i < 4; i++) {
                                             const pizzaIcon = document.createElement('div');
                                             pizzaIcon.innerHTML = '🍕';
@@ -1107,7 +1098,6 @@ def main():
                                             }, 2000);
                                         }
                                         
-                                        // Fade out and remove
                                         let opacity = 1;
                                         const fadeInterval = setInterval(() => {
                                             opacity -= 0.05;
@@ -1125,7 +1115,7 @@ def main():
                             }
                         });
                         
-                        // Check if pizza is out of bounds
+                        // If out of bounds
                         if (pizzaX > 850 || pizzaY < -50) {
                             pizzaThrown = false;
                             pizzaInHand = false;
@@ -1141,13 +1131,13 @@ def main():
                     requestAnimationFrame(gameLoop);
                 }
                 
-                // Focus handler for iframe in Streamlit
+                // Focus handler
                 window.addEventListener('click', function() {
                     document.getElementById('streamlit-app-warning').style.display = 'none';
                     gameContainer.focus();
                 });
                 
-                // Make sure the game container can receive keyboard events
+                // Make sure container can receive keyboard events
                 gameContainer.tabIndex = 0;
             });
         </script>
@@ -1155,42 +1145,46 @@ def main():
     </html>
     """
     
-    # Create a responsive container for the game with appropriate height
-    st.markdown("""
-    <style>
-    .game-container {
-        height: 650px;
-        margin: 0 auto;
-        border-radius: 10px;
-        overflow: hidden;
-    }
-    </style>
-    """, unsafe_allow_html=True)
-    
-    # Display instructions
+    # Simple style override for your Streamlit layout
+    st.markdown(
+        """
+        <style>
+        /* Just for outer container styling in Streamlit. 
+           We don't fix a height here so #game-container can be responsive. */
+        .outer-game-wrapper {
+            width: 100%;
+            max-width: 900px;
+            margin: 0 auto;
+        }
+        </style>
+        """,
+        unsafe_allow_html=True
+    )
+
+    # Instructions in Streamlit
     st.markdown("""
     ### How to Play
-    1. Click inside the game area to give it focus
-    2. Use **SPACE** to get a pizza and charge/throw
-    3. Use **UP/DOWN** arrow keys to move the oven
-    4. Hit targets to score points and collect powerups!
+    1. Click inside the game area to give it focus  
+    2. Use **SPACE** to get a pizza and charge/throw  
+    3. Use **UP/DOWN** arrow keys to move the oven  
+    4. Hit targets to score points and collect powerups!  
     """)
-    
-    # Insert the game using an HTML component
-    st.markdown('<div class="game-container">', unsafe_allow_html=True)
-    components.html(game_html, height=650, scrolling=False)
+
+    st.markdown('<div class="outer-game-wrapper">', unsafe_allow_html=True)
+
+    # Embed the responsive HTML game
+    # - height=800 or so, to give enough space without scroll
+    # - scrolling=False to hide scrollbars
+    components.html(game_html, height=800, scrolling=False)
+
     st.markdown('</div>', unsafe_allow_html=True)
     
-    # Display additional information
     st.markdown("---")
     st.markdown("""
     ### About This Game
-    This is a simple Pizza Toss game built with HTML, CSS, and JavaScript, embedded in Streamlit. 
-    
-    The game uses Streamlit's HTML components feature to render an iframe with the game.
-    
-    **Note:** For the best experience, play in a desktop browser.
+    This is a simple Pizza Toss game built with HTML, CSS, and JavaScript, and embedded in Streamlit. 
     """)
+
 
 if __name__ == "__main__":
     main()
